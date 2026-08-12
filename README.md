@@ -39,6 +39,33 @@ Run sandbox IDE:
 ./gradlew runIde
 ```
 
+## CI / Release (GitHub Actions)
+
+Workflow: [`.github/workflows/build-plugin.yml`](.github/workflows/build-plugin.yml)
+
+| 触发 | 行为 |
+|---|---|
+| Push `master` / `main`、PR、手动 `workflow_dispatch` | `buildPlugin`，上传 zip artifact |
+| Push tag `v*`（如 `v1.0.0`） | 同上，并创建 **GitHub Release**（附带 zip） |
+| Push tag `v*` 且配置了 `PUBLISH_TOKEN` | 额外执行 `publishPlugin` 发布到 JetBrains Marketplace |
+
+发布示例：
+
+```bash
+# 版本号取自 tag（去掉 v 前缀），无需手改 build.gradle.kts
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+可选 Secrets（仓库 Settings → Secrets and variables → Actions）：
+
+| Secret | 用途 |
+|---|---|
+| `PUBLISH_TOKEN` | JetBrains Marketplace 永久令牌（[生成说明](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html#obtaining-a-token)） |
+| `CERTIFICATE_CHAIN` / `PRIVATE_KEY` / `PRIVATE_KEY_PASSWORD` | 可选插件签名（Marketplace 推荐） |
+
+未配置 `PUBLISH_TOKEN` 时，标签发布仍会成功创建 GitHub Release，仅跳过 Marketplace。
+
 ## Sample project
 
 `waaagh/sample/debug_openfeign/` is a Maven multi-module fixture. Matching pair for demos: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).

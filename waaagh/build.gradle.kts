@@ -11,7 +11,8 @@ plugins {
 }
 
 group = "com.waaagh"
-version = "1.0.0"
+// CI can override via -PpluginVersion=1.2.3 (e.g. from a v* git tag)
+version = (findProperty("pluginVersion") as String?) ?: "1.0.0"
 
 repositories {
     maven { url = uri("https://www.jetbrains.com/intellij-repository/releases") }
