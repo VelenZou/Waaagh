@@ -28,7 +28,7 @@ public class UserPluginConfigurableUI implements Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return "Waaagh";
+        return "WAAAGH!!!";
     }
 
     @Nullable
