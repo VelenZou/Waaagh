@@ -1,5 +1,7 @@
 # WAAAGH!!!
 
+**English** | [中文](README.zh-CN.md)
+
 > *Waaagh!* — the roaring green tide of Warhammer 30k Orks. They bolt scrap together on pure instinct, and somehow the thing *works*. Same energy here.
 
 **WAAAGH!!!** is a collection of IntelliJ IDEA plugins. Popular tools in the collection may later be spun out as their own standalone plugins.
@@ -11,7 +13,7 @@ Every line in this project — production code **and** tests — is generated en
 - throw ideas at the model, and
 - give the final thumbs-up on whether the result feels good enough to ship.
 
-That is the whole loop: **if it feels right, it ships** (“感觉可以就可以”). It is how a Warhammer Ork builds — grab whatever's lying around, kitbash it together, yell **WAAAGH!!!**, and somehow it runs. Hence the name.
+That is the whole loop: **if it feels right, it ships** (“感觉可以就可以的那种感觉” — that gut-feel "yeah, this'll do" vibe). It is how a Warhammer Ork builds — grab whatever's lying around, kitbash it together, yell **WAAAGH!!!**, and somehow it runs. Hence the name.
 
 ## What's inside
 

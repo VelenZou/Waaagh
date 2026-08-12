@@ -6,9 +6,27 @@
 
     <description>
         <![CDATA[
-            <b>WAAAGH!!!</b> — part of the WAAAGH!!! IntelliJ plugin collection, powered by Ork energy.
+            <b>WAAAGH!!!</b> —— 一个由大模型端到端生成的 IntelliJ IDEA 插件集合。
             <br><br>
-            This tool provides Spring Cloud Feign &lt;-&gt; Controller navigation:
+            这个项目的<b>全部代码与测试都由大语言模型生成</b>：没有人工编写代码，也没有人工 code review；
+            人类只负责提出想法、做最终验收，追求的就是<b>「感觉可以就可以的那种感觉」</b>。
+            集合里受欢迎的子工具，未来可能会被拆分成独立插件。
+            <br><br>
+            <b>当前工具：Feign ↔ Controller 跳转</b>
+            <ul>
+              <li><b>Go to Implementation</b>（Ctrl+Alt+B）：从 Feign 方法跳转到匹配的 Controller</li>
+              <li><b>Go to Declaration</b>（Ctrl+B / Ctrl+单击）：在 Feign 与 Controller 之间互相跳转</li>
+              <li><b>Call Hierarchy</b>：Feign 显示为 Controller 的调用方，Controller 显示为 Feign 的被调用方</li>
+            </ul>
+            支持解析 <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>，
+            双边 PSI 缓存，以及一键复制完整 URL。
+            <hr>
+            <b>WAAAGH!!!</b> is a collection of IntelliJ IDEA plugins, generated end to end by large
+            language models —— <b>no hand-written code, no human code review</b>. Humans only provide
+            ideas and final acceptance, chasing that gut-feel <b>“感觉可以就可以的那种感觉”</b>
+            ("yeah, this'll do") vibe. Popular tools may later be spun out as standalone plugins.
+            <br><br>
+            <b>Current tool: Feign &lt;-&gt; Controller navigation</b>
             <ul>
               <li><b>Go to Implementation</b> (Ctrl+Alt+B) from Feign methods to matching Controllers</li>
               <li><b>Go to Declaration</b> (Ctrl+B / Ctrl+Click) between Feign and Controller</li>
@@ -16,8 +34,6 @@
             </ul>
             Also supports <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>,
             bilateral PSI cache, and full-URL clipboard copy.
-            <br><br>
-            Every line of code and tests in this project is generated end to end by large language models — no hand-written code, no human review.
             <br><br>
             <a href="https://github.com/velenzou/waaagh">GitHub</a>
         ]]>
@@ -27,9 +43,9 @@
         <![CDATA[
             <b>1.0.0</b>
             <ul>
-              <li>Initial WAAAGH!!! release</li>
-              <li>Go to Implementation / Go to Declaration for Feign &lt;-&gt; Controller</li>
-              <li>Call Hierarchy: Feign as Controller callers; Controllers as Feign callees</li>
+              <li>WAAAGH!!! 首个版本 / Initial WAAAGH!!! release</li>
+              <li>Feign ↔ Controller 的 Go to Implementation / Go to Declaration</li>
+              <li>Call Hierarchy：Feign 作为 Controller 的调用方，Controller 作为 Feign 的被调用方</li>
             </ul>
         ]]>
     </change-notes>
