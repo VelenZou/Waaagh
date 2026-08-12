@@ -2,6 +2,11 @@
 
 **English** | [中文](README.zh-CN.md)
 
+[![JetBrains Marketplace](https://img.shields.io/jetbrains/plugin/v/33496?label=JetBrains%20Marketplace&logo=jetbrains)](https://plugins.jetbrains.com/plugin/33496)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/33496)](https://plugins.jetbrains.com/plugin/33496)
+
+Install from the IDE (**Settings → Plugins → Marketplace**, search "WAAAGH") or get it on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/33496).
+
 > *Waaagh!* — the roaring green tide of Warhammer 30k Orks. They bolt scrap together on pure instinct, and somehow the thing *works*. Same energy here.
 
 **WAAAGH!!!** is a collection of IntelliJ IDEA plugins. Popular tools in the collection may later be spun out as their own standalone plugins.

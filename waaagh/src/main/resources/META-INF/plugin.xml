@@ -41,6 +41,10 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.0.3</b>
+            <ul>
+              <li>Maintenance release: JetBrains Marketplace listing metadata; no functional changes.</li>
+            </ul>
             <b>1.0.2</b>
             <ul>
               <li>Fix JetBrains Marketplace metadata validation (plugin name / description).</li>
