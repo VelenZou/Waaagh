@@ -1,45 +1,54 @@
 name: Auto-merge PRs
 
-# Enables GitHub auto-merge (squash) on trusted PRs. The PR then merges by itself
-# once all required status checks pass — see repo prerequisites below.
+# Fully hands-off, no repository settings required (no "Allow auto-merge", no branch
+# protection): when the "Build Plugin" CI succeeds for a trusted, non-draft PR, this
+# squash-merges it into master/main and deletes the head branch, using GITHUB_TOKEN.
 #
-# Prerequisites (one-time, in the GitHub UI — this workflow cannot set them):
-#   1. Settings → General → Pull Requests → enable "Allow auto-merge".
-#   2. Add a branch protection rule / ruleset on `master` that requires the
-#      CI status check named "build" (job id in build-plugin.yml). Without a
-#      required check there is nothing to wait for and auto-merge won't apply.
+# Safety: only merges PRs authored by OWNER / MEMBER / COLLABORATOR (fork/outside PRs
+# are skipped), only after CI passed, and only non-draft PRs targeting master/main.
 #
-# Scope: only non-draft PRs from the repo owner / members / collaborators are
-# auto-merged. Draft PRs are skipped until marked "Ready for review".
+# Note: `workflow_run` workflows only run from the copy on the default branch, so this
+# takes effect once merged to master; new CI runs then trigger it automatically.
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
-    branches: [master, main]
+  workflow_run:
+    workflows: ["Build Plugin"]
+    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  auto-merge:
+  merge:
     runs-on: ubuntu-latest
     if: >-
-      github.event.pull_request.draft == false &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Enable auto-merge (squash)
+      - name: Squash-merge PRs whose CI passed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
           REPO: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -euo pipefail
-          if [ "$(gh api "repos/$REPO" --jq '.allow_auto_merge')" != "true" ]; then
-            echo "::notice::'Allow auto-merge' is OFF (Settings → General → Pull Requests). Skipping."
+          echo "Build Plugin succeeded on branch: $HEAD_BRANCH"
+          prs=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[].number')
+          if [ -z "$prs" ]; then
+            echo "No open PR for branch $HEAD_BRANCH; nothing to merge."
             exit 0
           fi
-          # --auto waits for required checks (needs a branch protection rule requiring "build").
-          if ! gh pr merge --auto --squash --delete-branch "$PR_URL"; then
-            echo "::warning::Could not enable auto-merge. Ensure a branch protection rule on the base branch requires the 'build' status check."
-          fi
+          for pr in $prs; do
+            info=$(gh api "repos/$REPO/pulls/$pr")
+            draft=$(echo "$info" | jq -r '.draft')
+            assoc=$(echo "$info" | jq -r '.author_association')
+            base=$(echo "$info" | jq -r '.base.ref')
+            echo "PR #$pr — draft=$draft author_association=$assoc base=$base"
+            if [ "$draft" != "false" ]; then echo "skip: draft PR"; continue; fi
+            case "$base" in master|main) ;; *) echo "skip: base $base"; continue ;; esac
+            case "$assoc" in OWNER|MEMBER|COLLABORATOR) ;; *) echo "skip: untrusted author ($assoc)"; continue ;; esac
+            echo "Merging PR #$pr ..."
+            gh pr merge "$pr" --repo "$REPO" --squash --delete-branch \
+              || echo "::warning::Could not merge PR #$pr (a branch protection rule may be blocking it)."
+          done
