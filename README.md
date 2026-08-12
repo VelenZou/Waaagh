@@ -1,4 +1,4 @@
-# Waaagh
+# WAAAGH!!!
 
 > *Waaagh!* — Ork psychic energy from Warhammer 30k. Here it powers Feign ↔ Controller navigation in IntelliJ IDEA.
 

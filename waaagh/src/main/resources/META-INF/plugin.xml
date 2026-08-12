@@ -1,14 +1,14 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.waaagh</id>
-    <name>Waaagh</name>
+    <name>WAAAGH!!!</name>
     <vendor email="velenzou@users.noreply.github.com" url="https://github.com/velenzou/waaagh">velenzou</vendor>
 
     <description>
         <![CDATA[
-            <b>Waaagh</b> — Spring Cloud Feign &lt;-&gt; Controller navigation powered by Ork energy.
+            <b>WAAAGH!!!</b> — Spring Cloud Feign &lt;-&gt; Controller navigation powered by Ork energy.
             <br><br>
-            Forked from FeignClient Assistant (FeignX), Waaagh keeps gutter-icon navigation and adds:
+            Forked from FeignClient Assistant (FeignX), WAAAGH!!! keeps gutter-icon navigation and adds:
             <ul>
               <li><b>Go to Implementation</b> (Ctrl+Alt+B) from Feign methods to matching Controllers</li>
               <li><b>Go to Declaration</b> (Ctrl+B / Ctrl+Click) between Feign and Controller</li>
@@ -25,7 +25,7 @@
         <![CDATA[
             <b>1.0.0</b>
             <ul>
-              <li>Initial Waaagh release based on FeignClient Assistant</li>
+              <li>Initial WAAAGH!!! release based on FeignClient Assistant</li>
               <li>Go to Implementation / Go to Declaration for Feign &lt;-&gt; Controller</li>
               <li>Call Hierarchy: Feign as Controller callers; Controllers as Feign callees</li>
             </ul>
