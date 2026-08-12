@@ -1,10 +1,15 @@
 package com.waaagh.utils;
 
+import com.intellij.openapi.project.DumbService;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.waaagh.enums.SpringBootClassAnnotation;
 import com.waaagh.enums.SpringCloudClassAnnotation;
 import com.waaagh.enums.SpringBootMethodAnnotation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -163,7 +168,7 @@ public class AnnotationParserUtils {
      * @return
      */
     public static boolean isElementWithinFeign(PsiElement element) {
-        PsiClass psiClass = null;
+        PsiClass psiClass;
 
         if (element instanceof PsiClass) {
             psiClass = (PsiClass) element;
@@ -171,16 +176,53 @@ public class AnnotationParserUtils {
             psiClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
         }
 
-        if (psiClass != null && psiClass.isInterface()) {
-            PsiAnnotation[] annotations = psiClass.getModifierList().getAnnotations();
-            for (PsiAnnotation annotation : annotations) {
-                if (SpringCloudClassAnnotation.FEIGNCLIENT.getQualifiedName().equals(annotation.getQualifiedName())) {
-                    return true;
-                }
+        // 既支持接口本身是 @FeignClient，也支持“父接口方法 + @FeignClient 子接口继承”的场景。
+        return isFeignHierarchyInterface(psiClass);
+    }
+
+    /**
+     * 判断接口是否属于 Feign 调用体系：接口本身是 @FeignClient，或存在 @FeignClient 子接口（直接/间接）继承了它。
+     * <p>
+     * 用于支持 Feign 客户端接口继承基础 API 接口、由基础 API 接口承载 @RequestMapping 端点方法的写法。
+     *
+     * @param psiClass 接口
+     * @return 是否属于 Feign 体系
+     */
+    public static boolean isFeignHierarchyInterface(PsiClass psiClass) {
+        return resolveFeignClientClass(psiClass) != null;
+    }
+
+    /**
+     * 解析承载该接口（及其方法）的具体 @FeignClient 接口。
+     * <ul>
+     *     <li>若 psiClass 本身标注了 @FeignClient，返回其自身；</li>
+     *     <li>否则在项目范围内查找继承了 psiClass 的 @FeignClient 子接口并返回（用于父接口场景）。</li>
+     * </ul>
+     *
+     * @param psiClass 待解析的接口（通常是端点方法所在的接口）
+     * @return 对应的 @FeignClient 接口；找不到返回 null
+     */
+    @Nullable
+    public static PsiClass resolveFeignClientClass(PsiClass psiClass) {
+        if (psiClass == null || !psiClass.isValid() || !psiClass.isInterface()) {
+            return null;
+        }
+        if (isFeignInterface(psiClass)) {
+            return psiClass;
+        }
+        Project project = psiClass.getProject();
+        if (DumbService.isDumb(project)) {
+            return null;
+        }
+        // 查找继承了当前接口的 @FeignClient 子接口（deep=true 覆盖多级继承）。
+        for (PsiClass heir : ClassInheritorsSearch
+                .search(psiClass, GlobalSearchScope.projectScope(project), true)
+                .findAll()) {
+            if (isFeignInterface(heir)) {
+                return heir;
             }
         }
-
-        return false;
+        return null;
     }
 
     public static String getRequestMethodFromMethodName(String methodName) {

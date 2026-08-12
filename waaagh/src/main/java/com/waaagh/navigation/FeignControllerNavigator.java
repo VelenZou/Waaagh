@@ -40,8 +40,9 @@ public final class FeignControllerNavigator {
         return method != null
                 && method.isValid()
                 && ProjectUtils.isBizElement(method)
-                && AnnotationParserUtils.isElementWithinFeign(method)
-                && AnnotationParserUtils.containsRestfulAnnotation(method);
+                // 先做廉价的注解判断，避免对无 Rest 注解的方法触发继承体系查找
+                && AnnotationParserUtils.containsRestfulAnnotation(method)
+                && AnnotationParserUtils.isElementWithinFeign(method);
     }
 
     public static boolean isControllerMethod(@Nullable PsiMethod method) {
