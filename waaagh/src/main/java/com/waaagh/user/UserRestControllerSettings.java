@@ -12,10 +12,10 @@ import org.jetbrains.annotations.Nullable;
  * @Date: 2025/4/2 21:17
  * @Project: waaagh
  * @Version: 1.0.0
- * @Description: 用户配置存储在本地的FeignClient-Assistant-Settings.xml
+ * @Description: 用户配置存储在本地的Waaagh-Settings.xml
  */
 @Service(Service.Level.APP)
-@State(name = "ControllerPluginSettings", storages = @Storage("FeignClient-Assistant-Settings.xml"))
+@State(name = "ControllerPluginSettings", storages = @Storage("Waaagh-Settings.xml"))
 public final class UserRestControllerSettings implements PersistentStateComponent<UserRestControllerSettings.State> {
 
     private State state = new State();

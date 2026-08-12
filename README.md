@@ -1,12 +1,25 @@
 # WAAAGH!!!
 
-> *Waaagh!* — Ork psychic energy from Warhammer 30k. Here it powers Feign ↔ Controller navigation in IntelliJ IDEA.
+> *Waaagh!* — the roaring green tide of Warhammer 30k Orks. They bolt scrap together on pure instinct, and somehow the thing *works*. Same energy here.
 
-IntelliJ plugin that navigates between Spring Cloud `@FeignClient` methods and matching `@RestController` / `@Controller` endpoints.
+**WAAAGH!!!** is a collection of IntelliJ IDEA plugins. Popular tools in the collection may later be spun out as their own standalone plugins.
 
-Based on [FeignClient Assistant (FeignX)](https://github.com/lltopk/feignx-plugin) (Apache-2.0), Waaagh keeps gutter-icon jumps and adds IDE-native **Go to Implementation** plus **Call Hierarchy** integration (inspired by [MyBatisX](https://gitee.com/baomidou/MybatisX/)).
+## Why this project is different
 
-## Features
+Every line in this project — production code **and** tests — is generated end to end by large language models. There is **no hand-written code and no human code review**. Humans do exactly two things:
+
+- throw ideas at the model, and
+- give the final thumbs-up on whether the result feels good enough to ship.
+
+That is the whole loop: **if it feels right, it ships** (“感觉可以就可以”). It is how a Warhammer Ork builds — grab whatever's lying around, kitbash it together, yell **WAAAGH!!!**, and somehow it runs. Hence the name.
+
+## What's inside
+
+Right now the collection ships one tool.
+
+### Feign ↔ Controller Navigator
+
+Navigates between Spring Cloud `@FeignClient` methods and matching `@RestController` / `@Controller` endpoints, with gutter-icon jumps plus IDE-native **Go to Implementation** and **Call Hierarchy** integration.
 
 | Capability | How |
 |---|---|
@@ -16,7 +29,7 @@ Based on [FeignClient Assistant (FeignX)](https://github.com/lltopk/feignx-plugi
 | **Call Hierarchy** | Feign methods show Controllers as **callees**; Controller methods show Feign clients as **callers** |
 | Context path | Parses `server.servlet.context-path` and `spring.mvc.servlet.path` |
 
-### How Hierarchy is wired
+#### How Hierarchy is wired
 
 - **Callers (Controller → Feign):** `MethodReferencesSearch` contributes synthetic references from matching Feign methods, so the stock Java Call Hierarchy Callers tree picks them up.
 - **Callees (Feign → Controller):** a `callHierarchyProvider` (ordered first) wraps `JavaCallHierarchyProvider` and only customizes Feign methods; everything else stays vanilla Java hierarchy.
@@ -72,4 +85,4 @@ git push origin v1.0.0
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE). Original FeignX copyright retained in file headers where applicable.
+Apache License 2.0 — see [LICENSE](LICENSE). Third-party attributions are listed in [NOTICE](NOTICE).
