@@ -6,6 +6,8 @@
 
     <description>
         <![CDATA[
+            <b>English</b>
+            <br><br>
             <b>WAAAGH</b> is a collection of IntelliJ IDEA plugins, generated end to end by large
             language models — <b>no hand-written code, no human code review</b>. Humans only provide
             ideas and final acceptance, chasing that gut-feel "yeah, this'll do" vibe
@@ -19,7 +21,10 @@
             </ul>
             Also supports <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>,
             bilateral PSI cache, and full-URL clipboard copy.
-            <hr>
+            <br><br>
+            <br><br>
+            <b>中文</b>
+            <br><br>
             <b>WAAAGH!!!</b> —— 一个由大模型端到端生成的 IntelliJ IDEA 插件集合。
             <br><br>
             这个项目的<b>全部代码与测试都由大语言模型生成</b>：没有人工编写代码，也没有人工 code review；
@@ -41,18 +46,6 @@
 
     <change-notes>
         <![CDATA[
-            <b>1.0.4</b>
-            <ul>
-              <li>Release pipeline: plugin signing is now optional, so Marketplace publish works without signing certificates. No functional changes.</li>
-            </ul>
-            <b>1.0.3</b>
-            <ul>
-              <li>Maintenance release: JetBrains Marketplace listing metadata; no functional changes.</li>
-            </ul>
-            <b>1.0.2</b>
-            <ul>
-              <li>Fix JetBrains Marketplace metadata validation (plugin name / description).</li>
-            </ul>
             <b>1.0.1</b>
             <ul>
               <li>Feign inheritance: endpoints declared on a base API interface (extended by an empty @FeignClient sub-interface) are now navigable and appear in Call Hierarchy.</li>
