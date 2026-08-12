@@ -1,0 +1,93 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.waaagh</id>
+    <name>Waaagh</name>
+    <vendor email="velenzou@users.noreply.github.com" url="https://github.com/velenzou/waaagh">velenzou</vendor>
+
+    <description>
+        <![CDATA[
+            <b>Waaagh</b> — Spring Cloud Feign &lt;-&gt; Controller navigation powered by Ork energy.
+            <br><br>
+            Forked from FeignClient Assistant (FeignX), Waaagh keeps gutter-icon navigation and adds:
+            <ul>
+              <li><b>Go to Implementation</b> (Ctrl+Alt+B) from Feign methods to matching Controllers</li>
+              <li><b>Go to Declaration</b> (Ctrl+B / Ctrl+Click) between Feign and Controller</li>
+              <li><b>Call Hierarchy</b> integration — Feign appears as callers of Controllers, and Controllers appear as callees of Feign</li>
+            </ul>
+            Also supports <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>,
+            bilateral PSI cache, and full-URL clipboard copy.
+            <br><br>
+            <a href="https://github.com/velenzou/waaagh">GitHub</a>
+        ]]>
+    </description>
+
+    <change-notes>
+        <![CDATA[
+            <b>1.0.0</b>
+            <ul>
+              <li>Initial Waaagh release based on FeignClient Assistant</li>
+              <li>Go to Implementation / Go to Declaration for Feign &lt;-&gt; Controller</li>
+              <li>Call Hierarchy: Feign as Controller callers; Controllers as Feign callees</li>
+            </ul>
+        ]]>
+    </change-notes>
+
+    <version>1.0.0</version>
+    <idea-version since-build="203.0"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Gutter icon navigation (FeignX heritage) -->
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.waaagh.provider.F2CLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.waaagh.provider.C2FLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.waaagh.provider.CopyControllerUrlLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.waaagh.provider.CopyFeignUrlLineMarkerProvider"/>
+
+        <!-- Go to Implementation (Ctrl+Alt+B) -->
+        <definitionsScopedSearch implementation="com.waaagh.navigation.FeignDefinitionsSearcher"/>
+
+        <!-- Go to Declaration / Ctrl+Click -->
+        <gotoDeclarationHandler implementation="com.waaagh.navigation.FeignGotoDeclarationHandler"/>
+
+        <!-- Call Hierarchy Callers: Feign methods reference matching Controllers -->
+        <methodReferencesSearch implementation="com.waaagh.navigation.FeignMethodReferencesSearcher"/>
+
+        <!-- Call Hierarchy Callees for Feign methods (delegates non-Feign to Java) -->
+        <callHierarchyProvider language="JAVA" order="first"
+                               implementationClass="com.waaagh.hierarchy.WaaaghCallHierarchyProvider"/>
+
+        <notificationGroup id="Waaagh"
+                           displayType="BALLOON"
+                           key="notification.group.name"/>
+
+        <iconProvider id="com.waaagh.provider.tabIcon.FeignClassIconProvider"
+                      implementation="com.waaagh.provider.tabIcon.FeignClassIconProvider"/>
+        <iconProvider id="com.waaagh.provider.tabIcon.RestControllerIconProvider"
+                      implementation="com.waaagh.provider.tabIcon.RestControllerIconProvider"/>
+
+        <applicationConfigurable implementation="com.waaagh.user.UserPluginConfigurableUI"/>
+        <projectManagerListener implementation="com.waaagh.listener.app.CacheCleanListener"/>
+        <psiTreeChangeListener implementation="com.waaagh.listener.project.PsiClassGitChangeListener"/>
+
+    </extensions>
+
+    <application-components>
+        <component>
+            <implementation-class>com.waaagh.listener.app.WaaaghPluginInitializer</implementation-class>
+        </component>
+    </application-components>
+
+    <project-components>
+        <component>
+            <implementation-class>com.waaagh.listener.project.WaaaghProjectComponent</implementation-class>
+        </component>
+    </project-components>
+
+</idea-plugin>
