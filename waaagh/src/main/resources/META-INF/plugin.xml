@@ -74,10 +74,7 @@
         <!-- Go to Declaration / Ctrl+Click -->
         <gotoDeclarationHandler implementation="com.waaagh.navigation.FeignGotoDeclarationHandler"/>
 
-        <!-- Call Hierarchy Callers: Feign methods reference matching Controllers -->
-        <methodReferencesSearch implementation="com.waaagh.navigation.FeignMethodReferencesSearcher"/>
-
-        <!-- Call Hierarchy Callees for Feign methods (delegates non-Feign to Java) -->
+        <!-- Call Hierarchy: Feign methods show Controllers as callees; Controllers show Feign clients as callers. Delegates non-mapping to Java. -->
         <callHierarchyProvider language="JAVA" order="first"
                                implementationClass="com.waaagh.hierarchy.WaaaghCallHierarchyProvider"/>
 

@@ -33,8 +33,10 @@ Navigates between Spring Cloud `@FeignClient` methods and matching `@RestControl
 
 #### How Hierarchy is wired
 
-- **Callers (Controller → Feign):** `MethodReferencesSearch` contributes synthetic references from matching Feign methods, so the stock Java Call Hierarchy Callers tree picks them up.
-- **Callees (Feign → Controller):** a `callHierarchyProvider` (ordered first) wraps `JavaCallHierarchyProvider` and only customizes Feign methods; everything else stays vanilla Java hierarchy.
+- A `callHierarchyProvider` (ordered first) wraps `JavaCallHierarchyProvider` and only repurposes the mapping views; everything else stays vanilla Java hierarchy.
+- **Callees (Feign → Controller):** for a Feign method, the Callees tree lists the matching Controller methods.
+- **Callers (Controller → Feign):** for a Controller method, the Callers tree lists the matching Feign client methods.
+- Feign clients can extend a base API interface: endpoint methods declared on the parent interface (with a `@FeignClient` sub-interface) are treated as Feign methods for navigation and hierarchy.
 
 ## Build
 
