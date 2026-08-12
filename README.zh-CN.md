@@ -33,8 +33,10 @@
 
 #### Hierarchy 是怎么接进去的
 
-- **Callers（Controller → Feign）：** 通过 `MethodReferencesSearch` 从匹配的 Feign 方法贡献「合成引用」，这样 IDE 自带的 Java Call Hierarchy 调用方树就能识别到它们。
-- **Callees（Feign → Controller）：** 用一个（`order="first"` 的）`callHierarchyProvider` 包装 `JavaCallHierarchyProvider`，只对 Feign 方法做定制，其余保持原生 Java hierarchy 行为。
+- 用一个（`order="first"` 的）`callHierarchyProvider` 包装 `JavaCallHierarchyProvider`，只改写映射相关的视图，其余保持原生 Java hierarchy 行为。
+- **Callees（Feign → Controller）：** 在 Feign 方法上打开 Callees，列出匹配的 Controller 方法。
+- **Callers（Controller → Feign）：** 在 Controller 方法上打开 Callers，列出匹配的 Feign 客户端方法。
+- Feign 客户端可以继承一个基础 API 接口：当父接口承载了 `@RequestMapping` 端点方法、并由一个 `@FeignClient` 子接口继承时，父接口上的这些方法也会被识别为 Feign 方法，跳转与层级都可用。
 
 ## 构建
 

@@ -123,13 +123,17 @@ public class FeignClassScanUtils {
     public static List<HttpMappingInfo> feignsOfPsiClass(PsiClass psiClass) {
         List<HttpMappingInfo> rs = new ArrayList<>();
         if (AnnotationParserUtils.isFeignInterface(psiClass)) {
-            // 解析类中的方法，提取接口路径
-            PsiMethod[] methods = psiClass.getMethods();
             String parentPath = extractFeignParentPathFromClassAnnotation(psiClass);
-            for (PsiMethod method : methods) {
+            // 使用 getAllMethods() 覆盖继承自父接口的端点方法：
+            // Feign 客户端接口可以自身为空、端点方法全部继承自基础 API 接口。
+            for (PsiMethod method : psiClass.getAllMethods()) {
+                PsiClass declaringClass = method.getContainingClass();
+                if (declaringClass != null && "java.lang.Object".equals(declaringClass.getQualifiedName())) {
+                    continue;
+                }
                 HttpMappingInfo feignInfo = HttpMappingInfo.of(parentPath, method);
                 if (feignInfo != null) {
-                    // 设置方法信息
+                    // psiMethod 指向方法的真实声明（可能位于父接口），跳转即落到声明处
                     feignInfo.setPsiMethod(method);
                     rs.add(feignInfo);
                 }
@@ -147,9 +151,11 @@ public class FeignClassScanUtils {
      */
     public static HttpMappingInfo feignOfPsiMethod(PsiClass psiClass, PsiMethod method) {
         HttpMappingInfo httpMappingInfo = null;
-        if (AnnotationParserUtils.isFeignInterface(psiClass)) {
-            // 解析类中的方法，提取接口路径
-            String parentPath = extractFeignParentPathFromClassAnnotation(psiClass);
+        // psiClass 可能是承载端点的父接口本身（无 @FeignClient），此时解析出继承它的 @FeignClient 子接口，
+        // 用子接口上的 path 前缀参与路径计算，从而支持“父接口方法”的正反向匹配。
+        PsiClass feignClient = AnnotationParserUtils.resolveFeignClientClass(psiClass);
+        if (feignClient != null) {
+            String parentPath = extractFeignParentPathFromClassAnnotation(feignClient);
             httpMappingInfo = HttpMappingInfo.of(parentPath, method);
             if (Objects.nonNull(httpMappingInfo)) {
                 // 设置方法信息
