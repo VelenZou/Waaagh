@@ -62,9 +62,17 @@ tasks {
     }
 
     signPlugin {
-        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-        privateKey.set(System.getenv("PRIVATE_KEY"))
-        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+        // Signing is optional for Marketplace publishing. Only enable it when real credentials are
+        // provided; otherwise leave the properties unset so signPlugin is skipped and publishPlugin
+        // uploads the unsigned zip. (In CI, unset secrets arrive as EMPTY strings — setting them
+        // would make signPlugin run and NPE on a blank private key.)
+        val certificateChainEnv = System.getenv("CERTIFICATE_CHAIN")
+        val privateKeyEnv = System.getenv("PRIVATE_KEY")
+        if (!certificateChainEnv.isNullOrBlank() && !privateKeyEnv.isNullOrBlank()) {
+            certificateChain.set(certificateChainEnv)
+            privateKey.set(privateKeyEnv)
+            password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+        }
     }
 
     publishPlugin {

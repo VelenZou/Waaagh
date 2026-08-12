@@ -41,6 +41,10 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.0.4</b>
+            <ul>
+              <li>Release pipeline: plugin signing is now optional, so Marketplace publish works without signing certificates. No functional changes.</li>
+            </ul>
             <b>1.0.3</b>
             <ul>
               <li>Maintenance release: JetBrains Marketplace listing metadata; no functional changes.</li>
