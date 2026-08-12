@@ -43,3 +43,16 @@ no gutter icons/navigation targets appear.
 ### Demo navigation
 Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
 Also exercise **Go to Implementation** (`Ctrl+Alt+B`) and **Call Hierarchy** (`Ctrl+Alt+H`) on Feign methods.
+
+Inheritance fixture: **`TransportServiceApi`** (base interface, no `@FeignClient`) ← **`TransportService`**
+(empty `@FeignClient`) ↔ **`TransportServerController`** (`/hello/world/transport/...`).
+
+### Testing navigation/hierarchy changes (do not skip)
+When changing any navigation, matching, or Call Hierarchy logic, always verify **all** of these in the
+`runIde` sandbox (gutter navigation alone is NOT enough — Call Hierarchy has its own code paths and has
+regressed before):
+- Gutter icons + **`Ctrl+Alt+B`** (Go to Implementation) both directions (Feign→Controller and Controller→Feign).
+- **`Ctrl+Alt+H`** Call Hierarchy **both directions**: on a Feign method the **Callees** must list the
+  Controllers; on a Controller method the **Callers** must list the Feign clients.
+- The **Feign-inheritance** scenario above (endpoints declared on a base interface, `@FeignClient` on an
+  empty sub-interface) — check both gutter navigation and both Call Hierarchy directions.
