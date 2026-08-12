@@ -12,8 +12,13 @@ sample project used as test-fixture data for the sandbox IDE.
 
 ### Build / lint / run (from `waaagh/`)
 - Build: `./gradlew buildPlugin` → `waaagh/build/distributions/waaagh-<version>.zip`
+- Override version: `./gradlew buildPlugin -PpluginVersion=1.2.3`
 - Verify: `./gradlew verifyPlugin`
 - Run sandbox IDE: `./gradlew runIde` (GUI on `DISPLAY=:1`)
+
+### CI
+- Workflow `.github/workflows/build-plugin.yml` builds on PR / push to master.
+- Tag `v*` creates a GitHub Release with the zip; optional Marketplace publish via `PUBLISH_TOKEN`.
 
 ### Demo navigation
 Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
