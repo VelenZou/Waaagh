@@ -1,0 +1,6 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "install": "chmod +x waaagh/gradlew && cd waaagh && ./gradlew --no-daemon buildPlugin -x buildSearchableOptions"
+}
