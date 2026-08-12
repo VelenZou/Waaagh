@@ -1,0 +1,42 @@
+---
+description: WAAAGH!!! release & JetBrains Marketplace conventions (plugin.xml metadata, description, What's New, versioning/publishing)
+alwaysApply: true
+---
+
+# Release & JetBrains Marketplace conventions
+
+Apply whenever editing `waaagh/src/main/resources/META-INF/plugin.xml`, cutting a release, or
+touching the release pipeline. (Build/test conventions live in `AGENTS.md`.)
+
+## Branding / naming
+- The brand is **WAAAGH!!!** — use it (with the `!!!`) in `README*.md` and in the plugin `<description>` prose.
+- The plugin.xml `<name>` MUST be **`WAAAGH`** (no `!`). JetBrains Marketplace names only allow letters,
+  digits, spaces and `` .,+_-/:()#'&[]| `` — `!` is rejected on upload.
+- Do NOT change the plugin `<id>` (`com.waaagh`) — it identifies the Marketplace plugin (id `33496`).
+
+## `<description>` (Marketplace "Overview")
+- MUST start with Latin characters and be at least 40 characters → put the **English block first**, then the Chinese block.
+- Keep it **bilingual** with a clear split: a `<b>English</b>` section and a `<b>中文</b>` section,
+  separated by a blank line (`<br><br>`). Do NOT use `<hr>` as the divider — the Marketplace renderer strips it.
+- Tagline, verbatim: **「感觉可以就可以的那种感觉」** (never the shortened "感觉可以就可以").
+- Positioning: an AI-generated IntelliJ IDEA **plugin collection** — all code and tests generated end to end
+  by large language models, no hand-written code and no human code review; humans only give ideas + final acceptance.
+
+## `<change-notes>` (Marketplace "What's New")
+- List **only user-facing feature/behavior changes**.
+- Do NOT add entries for release-pipeline / CI / signing changes, Marketplace-metadata or listing fixes,
+  or other non-functional plumbing.
+- A version that only changes docs / listing / pipeline gets **no** What's New entry.
+
+## Versioning & publishing
+- Release by pushing a git tag **`v<major>.<minor>.<patch>`**. CI (`.github/workflows/build-plugin.yml`)
+  builds the plugin, creates a GitHub Release, and publishes to Marketplace. The version is derived from the
+  tag via `-PpluginVersion`, so do NOT hand-edit `<version>` in plugin.xml for releases.
+- **Never reuse a published version/tag** — Marketplace rejects duplicate versions; always bump to the next unused patch.
+- Plugin **signing is optional**. Keep the guarded `signPlugin` block in `waaagh/build.gradle.kts` (only sign
+  when `CERTIFICATE_CHAIN` and `PRIVATE_KEY` are non-blank). Publishing unsigned is fine; do not make signing mandatory.
+- Marketplace "Overview" / "What's New" only refresh after a new version is uploaded, and may lag while JetBrains processes it.
+
+## Secrets (repo → Settings → Secrets)
+- `PUBLISH_TOKEN` — required for Marketplace auto-publish (absent ⇒ the publish step skips).
+- `CERTIFICATE_CHAIN` / `PRIVATE_KEY` / `PRIVATE_KEY_PASSWORD` — optional; presence auto-enables signing.
