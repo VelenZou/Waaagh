@@ -1,0 +1,20 @@
+---
+description: Pull request workflow for this repo (open PRs ready/non-draft so CI-gated auto-merge applies)
+alwaysApply: true
+---
+
+# Pull request workflow
+
+This repo has **hands-off auto-merge**: `.github/workflows/auto-merge.yml` squash-merges a PR into
+`master`/`main` (and deletes the branch) once the **Build Plugin** CI succeeds — for **non-draft** PRs
+authored by OWNER / MEMBER / COLLABORATOR. No repository settings or manual clicks are needed.
+
+Conventions:
+
+- **Open PRs as ready (non-draft) by default** so they can auto-merge. Do NOT create draft PRs unless the
+  work is intentionally WIP/experimental or the user explicitly asks for a draft. (The user should not have
+  to remind you to make PRs non-draft.)
+- **CI passing is the merge gate** — do not merge PRs by hand or add other merge automation.
+- Keep each PR green: the `build` job in `build-plugin.yml` must pass, or auto-merge won't fire.
+- Releasing is separate and **tag-driven** (`v*`); merging a PR to `master` does not publish to Marketplace
+  (see the `release-and-marketplace` rule).
