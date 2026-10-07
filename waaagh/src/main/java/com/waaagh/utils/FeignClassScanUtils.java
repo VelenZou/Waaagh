@@ -3,8 +3,9 @@ package com.waaagh.utils;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.waaagh.cache.BilateralCacheManager;
-import com.waaagh.cache.InitialPsiClassCacheManager;
 import com.waaagh.entity.HttpMappingInfo;
 import com.waaagh.enums.SpringCloudClassAnnotation;
 import org.apache.commons.lang3.StringUtils;
@@ -12,12 +13,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class FeignClassScanUtils {
-    // 初始化PsiClass缓存管理器
-    private static final InitialPsiClassCacheManager initialPsiClassCacheManager = InitialPsiClassCacheManager.getInstance();
 
     /**
      * 当前controller，扫描待跳转的所有目标Feign
@@ -70,31 +68,17 @@ public class FeignClassScanUtils {
             return Collections.emptyList();
         }
 
-        PsiManager psiManager = PsiManager.getInstance(project);
-
-        PsiPackage rootPackage = JavaPsiFacade.getInstance(psiManager.getProject()).findPackage("");
-
-        // 获取项目ID
-        String projectId = project.getBasePath();
-
-        List<PsiClass> javaFiles = initialPsiClassCacheManager.queryCurProjectPsiClassesCache(projectId);
-
-        if (CollectionUtils.isEmpty(javaFiles)) {
-            javaFiles = ProjectUtils.scanProjectCls(rootPackage, project);
-            initialPsiClassCacheManager.initCurProjectPsiClassCache(projectId, javaFiles);
-        }
-
         //Feign接口缓存查询
         Map<String, HttpMappingInfo> feignCaches = BilateralCacheManager.queryFeignCaches(project);
 
         if (MapUtils.isNotEmpty(feignCaches)) {
             return new ArrayList<>(feignCaches.values());
         }
-        //获取项目中的所有Feign源文件
+
+        // 通过注解索引查找 @FeignClient 接口，避免全量递归遍历项目中的所有包
         List<HttpMappingInfo> feignInfos = new ArrayList<>();
-        //创建全部的Feign接口信息
-        for (PsiClass psiClass : javaFiles) {
-            // 校验 psiClass 的有效性，毕竟有可能psiClass是从缓存中获取的，但是被RestClassIconProvider修改了
+        for (PsiClass psiClass : findFeignClientClasses(project)) {
+            // 校验 psiClass 的有效性，毕竟有可能psiClass是从索引中获取的，但已经被修改了
             if (null == psiClass || !psiClass.isValid()) {
                 continue;
             }
@@ -104,6 +88,28 @@ public class FeignClassScanUtils {
         BilateralCacheManager.initFeignCaches(project, feignInfos);
 
         return feignInfos;
+    }
+
+    /**
+     * 基于注解索引查找项目中的 @FeignClient 接口
+     */
+    private static List<PsiClass> findFeignClientClasses(Project project) {
+        GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+        PsiClass feignClientAnnotation = JavaPsiFacade.getInstance(project)
+                .findClass(SpringCloudClassAnnotation.FEIGNCLIENT.getQualifiedName(), scope);
+        if (feignClientAnnotation == null) {
+            return Collections.emptyList();
+        }
+
+        List<PsiClass> feignClientClasses = new ArrayList<>();
+        for (PsiClass psiClass : AnnotatedElementsSearch.searchPsiClasses(feignClientAnnotation, scope)
+                .findAll()) {
+            // 排除三方依赖，只保留项目源码中的类
+            if (psiClass.isValid() && ProjectUtils.isBizElement(psiClass)) {
+                feignClientClasses.add(psiClass);
+            }
+        }
+        return feignClientClasses;
     }
 
     /**
