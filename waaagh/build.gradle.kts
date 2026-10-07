@@ -1,13 +1,6 @@
-
-idea{
-    module{
-        isDownloadJavadoc = true
-        isDownloadSources = true
-    }
-}
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.5.2"
+    id("org.jetbrains.intellij.platform") version "2.19.0"
 }
 
 group = "com.waaagh"
@@ -15,29 +8,54 @@ group = "com.waaagh"
 version = (findProperty("pluginVersion") as String?) ?: "1.0.0"
 
 repositories {
-    maven { url = uri("https://www.jetbrains.com/intellij-repository/releases") }
     mavenCentral()
-    gradlePluginPortal()
-}
-
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-intellij {
-    version.set("2021.2")
-//    type.set("IU") // Target IDE Platform
-    type.set("IC") // Target IDE Platform
-    //gradle的下载idea安装包位置: %USERPROFILE%\.gradle\caches\modules-2\files-2.1\com.jetbrains.intellij.idea
-    plugins.set(listOf("com.intellij.java"))
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
+    intellijPlatform {
+        // 目标平台：统一版 IntelliJ IDEA（2025.3 起 Community/Ultimate 合并）
+        intellijIdea("2026.2.3")
+        bundledPlugin("com.intellij.java")
+    }
+
     compileOnly("org.projectlombok:lombok:1.18.22")
     implementation("org.yaml:snakeyaml:1.29")
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("commons-collections:commons-collections:3.2.2")
 }
 
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            // 起始支持版本，2020.3 (IDEA 201)
+            sinceBuild = "203"
+            // 不设兼容上限
+            untilBuild = provider { null }
+        }
+    }
+
+    signing {
+        // Signing is optional for Marketplace publishing. Only enable it when real credentials are
+        // provided; otherwise leave the properties unset so signPlugin is skipped and publishPlugin
+        // uploads the unsigned zip. (In CI, unset secrets arrive as EMPTY strings — setting them
+        // would make signPlugin run and NPE on a blank private key.)
+        val certificateChainEnv = System.getenv("CERTIFICATE_CHAIN")
+        val privateKeyEnv = System.getenv("PRIVATE_KEY")
+        if (!certificateChainEnv.isNullOrBlank() && !privateKeyEnv.isNullOrBlank()) {
+            certificateChain = certificateChainEnv
+            privateKey = privateKeyEnv
+            password = System.getenv("PRIVATE_KEY_PASSWORD")
+        }
+    }
+
+    // publishing token 默认取 PUBLISH_TOKEN 环境变量，无需显式配置
+}
+
 tasks {
-    // Set the JVM compatibility versions
+    // 保持 Java 11 字节码，兼容旧版本 IDE 的运行时
     withType<JavaCompile> {
         options.encoding = "UTF-8"
         sourceCompatibility = "11"
@@ -46,38 +64,5 @@ tasks {
 
     withType<Javadoc> {
         options.encoding = "UTF-8"
-
     }
-
-    patchPluginXml {
-        // 起始支持版本，2020.3 (IDEA 201)
-        sinceBuild.set("203")
-        // 支持至更高版本的IDEA. 版本不设限
-        untilBuild.set("")
-    }
-
-    signPlugin {
-        // Signing is optional for Marketplace publishing. Only enable it when real credentials are
-        // provided; otherwise leave the properties unset so signPlugin is skipped and publishPlugin
-        // uploads the unsigned zip. (In CI, unset secrets arrive as EMPTY strings — setting them
-        // would make signPlugin run and NPE on a blank private key.)
-        val certificateChainEnv = System.getenv("CERTIFICATE_CHAIN")
-        val privateKeyEnv = System.getenv("PRIVATE_KEY")
-        if (!certificateChainEnv.isNullOrBlank() && !privateKeyEnv.isNullOrBlank()) {
-            certificateChain.set(certificateChainEnv)
-            privateKey.set(privateKeyEnv)
-            password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-        }
-    }
-
-    publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN"))
-    }
-    runIde {
-        jvmArgs("-Xmx4096m", "-XX:ReservedCodeCacheSize=512m", "-Xms128m")
-    }
-}
-
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
 }

@@ -38,7 +38,7 @@
 
 ## 构建
 
-需要 **JDK 11**（Gradle 7.4.2 + IntelliJ 平台 2021.2）。
+需要 **JDK 25**（Gradle 9.7.1 + IntelliJ Platform Gradle Plugin 2.19，目标平台 IntelliJ IDEA 2026.2.3）。
 
 ```bash
 cd waaagh
