@@ -1,10 +1,13 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2.8" y="3.5" width="10.4" height="10.5" rx="1.9" stroke="#E66D17" stroke-width="1.2"/>
-  <rect x="5.3" y="2.3" width="5.4" height="2" rx="0.7" stroke="#E66D17" stroke-width="1.2"/>
-  <path d="M6.2 2.3 A1.8 1.8 0 0 1 9.8 2.3" stroke="#E66D17" stroke-width="1.2"/>
-  <circle cx="8" cy="1.85" r="0.5" fill="#E66D17"/>
-  <rect x="4.7" y="6.1" width="1.3" height="1.3" rx="0.4" stroke="#E66D17" stroke-width="0.9"/>
-  <path d="M7.2 6.75 H11" stroke="#E66D17" stroke-width="0.9" stroke-linecap="round"/>
-  <rect x="4.7" y="9.3" width="1.3" height="1.3" rx="0.4" stroke="#E66D17" stroke-width="0.9"/>
-  <path d="M7.2 9.95 H11" stroke="#E66D17" stroke-width="0.9" stroke-linecap="round"/>
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none">
+
+ <g>
+  <title>Layer 1</title>
+  <rect id="svg_1" stroke-width="1.2" stroke="#E66D17" rx="1.9" height="10.5" width="10.4" y="3.5" x="2.8"/>
+  <path id="svg_3" stroke-width="1.2" stroke="#E66D17" d="m6.2,2.92305a1.8,1.8 0 0 1 3.6,0"/>
+  <circle id="svg_4" fill="#E66D17" r="0.5" cy="2.34844" cx="8"/>
+  <rect id="svg_5" stroke-width="0.9" stroke="#E66D17" rx="0.4" height="1.3" width="1.3" y="6.1" x="4.7"/>
+  <path id="svg_6" stroke-linecap="round" stroke-width="0.9" stroke="#E66D17" d="m7.2,6.75l3.8,0"/>
+  <rect id="svg_7" stroke-width="0.9" stroke="#E66D17" rx="0.4" height="1.3" width="1.3" y="9.3" x="4.7"/>
+  <path id="svg_8" stroke-linecap="round" stroke-width="0.9" stroke="#E66D17" d="m7.2,9.95l3.8,0"/>
+ </g>
 </svg>
