@@ -100,6 +100,9 @@
     <applicationListeners>
         <listener class="com.waaagh.listener.app.CacheCleanListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <!-- 保存 / 外部编辑器修改被 IDEA 同步后清理全量扫描缓存，下次查询自动重扫（无需重开项目） -->
+        <listener class="com.waaagh.listener.app.VfsCacheRefreshListener"
+                  topic="com.intellij.openapi.vfs.VirtualFileManager"/>
     </applicationListeners>
 
 </idea-plugin>
