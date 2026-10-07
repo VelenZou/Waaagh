@@ -31,9 +31,9 @@ public class WaaaghCallHierarchyBrowser extends CallHierarchyBrowser {
      */
     public void activateInitialView() {
         if (FeignControllerNavigator.isFeignMethod(target)) {
-            changeView(CALLEE_TYPE);
+            changeView(getCalleeType());
         } else {
-            changeView(CALLER_TYPE);
+            changeView(getCallerType());
         }
     }
 
@@ -53,13 +53,13 @@ public class WaaaghCallHierarchyBrowser extends CallHierarchyBrowser {
         return super.createHierarchyTreeStructure(typeName, psiElement);
     }
 
-    // The framework keys tree structures by the localized view title; match both the raw constant
-    // and the localized label to stay correct across locales.
+    // The framework keys tree structures by the type name returned by these accessors
+    // (localized view titles), so match against them directly.
     private boolean isCalleeType(String typeName) {
-        return CALLEE_TYPE.equals(typeName) || getCalleeType().equals(typeName);
+        return getCalleeType().equals(typeName);
     }
 
     private boolean isCallerType(String typeName) {
-        return CALLER_TYPE.equals(typeName) || getCallerType().equals(typeName);
+        return getCallerType().equals(typeName);
     }
 }

@@ -38,7 +38,7 @@ Navigates between Spring Cloud `@FeignClient` methods and matching `@RestControl
 
 ## Build
 
-Requires **JDK 11** (Gradle 7.4.2 + IntelliJ platform 2021.2).
+Requires **JDK 25** (Gradle 9.7.1 + IntelliJ Platform Gradle Plugin 2.19, targeting IntelliJ IDEA 2026.2.3).
 
 ```bash
 cd waaagh
