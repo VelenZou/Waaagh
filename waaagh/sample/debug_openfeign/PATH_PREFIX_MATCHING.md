@@ -44,7 +44,7 @@ server.servlet.context-path + spring.mvc.servlet.path + 前缀 + 类 @RequestMap
 |---|---|---|---|---|
 | 1 | `V2UserClient#getById`（GET） | `/hello/world/v2/v2user/get/{id}` | `V2UserApiController#getById` | ✅ 图标 + Ctrl+Alt+B 命中 |
 | 2 | `V2UserClient#save`（POST） | `/hello/world/v2/v2user/save` | `V2UserApiController#save` | ✅（前缀 + 方法都匹配） |
-| 3 | `V2UserNoPrefixClient#getById`（GET） | `/hello/world/v2user/get/{id}`（缺 `/v2`） | — | ❌ 无图标，Ctrl+Alt+B 为空 |
+| 3 | `V2UserClientMissingPrefix#getById`（GET） | `/hello/world/v2user/get/{id}`（缺 `/v2`） | — | ❌ 无图标，Ctrl+Alt+B 为空 |
 | 4 | `V3OrderClient#detail`（GET） | `/hello/world/v3/v3order/detail/{id}` | `V3OrderApiController#detail` | ✅（HandlerTypePredicate 前缀 + 常量） |
 | 5 | `V2BetaClient#status`（GET） | `/hello/world/v2/v2beta-api/status` | `V2BetaApiController#status` | ✅（`controller.v2beta` 命中 `startsWith`，与 Spring 一致） |
 | 6 | 既有 `UserClient#update`（GET） | `/hello/world/user/update2/{id}` | `UserServerController#update` | ✅ 回归：未命中任何规则的包不加前缀 |
@@ -65,5 +65,5 @@ Copy URL 预期（Controller 侧）：
    - ❌ 行：不应出现图标，`Ctrl+Alt+B`（Go to Implementation）结果为空。
 3. 反向验证：打开对应 Controller，用 gutter 图标 / `Ctrl+Alt+B` / `Ctrl+Alt+H`（Call Hierarchy）检查匹配到的 Client，与表格互为镜像。
 4. 复制 URL：点击 Controller 方法注解行的 "Copy Controller URL" 图标，剪贴板内容应为表中的完整路径（含前缀）。
-5. 注意：全量扫描结果会被项目级缓存，**启动后再改配置类/新增 Controller，需要重启项目（关闭再打开）刷新**；
-   单个方法的 Copy URL 是即时重算的，不受影响。
+5. 注意：全量扫描结果按项目缓存；保存文件、或外部编辑器（Cursor 等）的修改被 IDEA 同步后，
+   缓存会自动失效，下次查询自动重扫，**无需重启 / 重开项目**；单个方法的 Copy URL 本就是即时重算的。

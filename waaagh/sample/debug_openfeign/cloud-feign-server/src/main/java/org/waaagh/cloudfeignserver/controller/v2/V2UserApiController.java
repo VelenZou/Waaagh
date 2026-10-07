@@ -16,7 +16,7 @@ import org.waaagh.cloudfeignapi.User;
  *   <li>GET /hello/world/v2/v2user/get/{id} → 匹配 V2UserClient#getById；</li>
  *   <li>POST /hello/world/v2/v2user/save → 匹配 V2UserClient#save。</li>
  * </ul>
- * ❌ V2UserNoPrefixClient 少了 /v2，不匹配本类。
+ * ❌ V2UserClientMissingPrefix 少了 /v2，不匹配本类。
  */
 @RestController
 @RequestMapping("/v2user")
