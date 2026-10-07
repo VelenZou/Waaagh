@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.collections.MapUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +29,12 @@ public class BilateralCacheManager {
   // <projectid, <classpath+methodname, HttpMappingInfo>>
   private static final Map<String, Map<String, HttpMappingInfo>> PROJECT_FEIGN_CACHE_MAP = new HashMap<>();
 
+  // 是否已完成过全量扫描。
+  // 注意：缓存的单个方法条目可能来自 setOrCoverXxxCache 的按需补全，
+  // 不能把"缓存非空"当作"全量扫描已完成"。
+  private static final Set<String> PROJECT_CONTROLLER_FULLY_SCANNED = ConcurrentHashMap.newKeySet();
+  private static final Set<String> PROJECT_FEIGN_FULLY_SCANNED = ConcurrentHashMap.newKeySet();
+
   /**
    * 清除指定项目的所有缓存
    */
@@ -34,6 +42,34 @@ public class BilateralCacheManager {
     String projectId = project.getBasePath();
     PROJECT_CONTROLLER_CACHE_MAP.remove(projectId);
     PROJECT_FEIGN_CACHE_MAP.remove(projectId);
+    if (projectId != null) {
+      PROJECT_CONTROLLER_FULLY_SCANNED.remove(projectId);
+      PROJECT_FEIGN_FULLY_SCANNED.remove(projectId);
+    }
+  }
+
+  public static boolean isControllerFullyScanned(Project project) {
+    String projectId = project.getBasePath();
+    return projectId != null && PROJECT_CONTROLLER_FULLY_SCANNED.contains(projectId);
+  }
+
+  public static void markControllerFullyScanned(Project project) {
+    String projectId = project.getBasePath();
+    if (projectId != null) {
+      PROJECT_CONTROLLER_FULLY_SCANNED.add(projectId);
+    }
+  }
+
+  public static boolean isFeignFullyScanned(Project project) {
+    String projectId = project.getBasePath();
+    return projectId != null && PROJECT_FEIGN_FULLY_SCANNED.contains(projectId);
+  }
+
+  public static void markFeignFullyScanned(Project project) {
+    String projectId = project.getBasePath();
+    if (projectId != null) {
+      PROJECT_FEIGN_FULLY_SCANNED.add(projectId);
+    }
   }
 
   /**
