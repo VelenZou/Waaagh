@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class ControllerClassScanUtils {
@@ -47,12 +46,12 @@ public class ControllerClassScanUtils {
       return Collections.emptyList();
     }
 
-    // controller接口缓存查询
-    Map<String, HttpMappingInfo> controllerCaches = BilateralCacheManager.queryControllerCaches(
-        project);
-
-    if (MapUtils.isNotEmpty(controllerCaches)) {
-      return new ArrayList<>(controllerCaches.values());
+    // 只有全量扫描完成后才能直接使用缓存；按需补全的单方法缓存不能当作全量结果
+    if (BilateralCacheManager.isControllerFullyScanned(project)) {
+      Map<String, HttpMappingInfo> controllerCaches = BilateralCacheManager.queryControllerCaches(
+          project);
+      return controllerCaches == null ? Collections.emptyList()
+          : new ArrayList<>(controllerCaches.values());
     }
 
     // 通过注解索引查找 Controller 类，避免全量递归遍历项目中的所有包
@@ -66,6 +65,7 @@ public class ControllerClassScanUtils {
     }
     // 将结果添加到缓存中
     BilateralCacheManager.initControllerCaches(project, httpMappingInfos);
+    BilateralCacheManager.markControllerFullyScanned(project);
 
     return httpMappingInfos;
   }
@@ -74,7 +74,9 @@ public class ControllerClassScanUtils {
    * 基于注解索引查找项目中的 Controller 类（@Controller / @RestController）
    */
   private static List<PsiClass> findControllerClasses(Project project) {
-    GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+    // 注意：@Controller/@RestController 来自依赖库，projectScope 不包含库中的 class，
+    // 必须用 allScope 才能解析到注解类；结果再用 isBizElement 过滤为项目源码。
+    GlobalSearchScope scope = GlobalSearchScope.allScope(project);
     JavaPsiFacade facade = JavaPsiFacade.getInstance(project);
 
     Set<PsiClass> controllerClasses = new LinkedHashSet<>();

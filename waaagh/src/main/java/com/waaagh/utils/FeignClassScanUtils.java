@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
-import org.apache.commons.collections.MapUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class FeignClassScanUtils {
@@ -68,11 +67,10 @@ public class FeignClassScanUtils {
             return Collections.emptyList();
         }
 
-        //Feign接口缓存查询
-        Map<String, HttpMappingInfo> feignCaches = BilateralCacheManager.queryFeignCaches(project);
-
-        if (MapUtils.isNotEmpty(feignCaches)) {
-            return new ArrayList<>(feignCaches.values());
+        // 只有全量扫描完成后才能直接使用缓存；按需补全的单方法缓存不能当作全量结果
+        if (BilateralCacheManager.isFeignFullyScanned(project)) {
+            Map<String, HttpMappingInfo> feignCaches = BilateralCacheManager.queryFeignCaches(project);
+            return feignCaches == null ? Collections.emptyList() : new ArrayList<>(feignCaches.values());
         }
 
         // 通过注解索引查找 @FeignClient 接口，避免全量递归遍历项目中的所有包
@@ -86,6 +84,7 @@ public class FeignClassScanUtils {
         }
         // 将结果添加到缓存中
         BilateralCacheManager.initFeignCaches(project, feignInfos);
+        BilateralCacheManager.markFeignFullyScanned(project);
 
         return feignInfos;
     }
@@ -94,7 +93,9 @@ public class FeignClassScanUtils {
      * 基于注解索引查找项目中的 @FeignClient 接口
      */
     private static List<PsiClass> findFeignClientClasses(Project project) {
-        GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+        // 注意：@FeignClient 来自依赖库，projectScope 不包含库中的 class，
+        // 必须用 allScope 才能解析到注解类；结果再用 isBizElement 过滤为项目源码。
+        GlobalSearchScope scope = GlobalSearchScope.allScope(project);
         PsiClass feignClientAnnotation = JavaPsiFacade.getInstance(project)
                 .findClass(SpringCloudClassAnnotation.FEIGNCLIENT.getQualifiedName(), scope);
         if (feignClientAnnotation == null) {
