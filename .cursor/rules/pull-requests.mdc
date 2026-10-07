@@ -5,9 +5,11 @@ alwaysApply: true
 
 # Pull request workflow
 
-This repo has **hands-off auto-merge**: `.github/workflows/auto-merge.yml` squash-merges a PR into
-`master`/`main` (and deletes the branch) once the **Build Plugin** CI succeeds — for **non-draft** PRs
-authored by OWNER / MEMBER / COLLABORATOR. No repository settings or manual clicks are needed.
+This repo has **owner-only auto-merge**: `.github/workflows/auto-merge.yml` squash-merges a PR into
+`master`/`main` (and deletes the branch) once the **Build Plugin** CI succeeds — but **only for
+non-draft PRs authored by the repository owner from a branch of this repository**. Fork PRs and PRs
+by other authors are never auto-merged; they stay open for manual review. No repository settings or
+manual clicks are needed for the owner's own PRs.
 
 Conventions:
 

@@ -36,9 +36,13 @@ touching the release pipeline. (Build/run conventions live in `AGENTS.md`.)
 - A version that only changes docs / listing / pipeline gets **no** What's New entry.
 
 ## Versioning & publishing
-- Release by pushing a git tag **`v<major>.<minor>.<patch>`**. CI (`.github/workflows/build-plugin.yml`)
-  builds the plugin, creates a GitHub Release, and publishes to Marketplace. The version is derived from the
-  tag via `-PpluginVersion`, so do NOT hand-edit `<version>` in plugin.xml for releases.
+- Release by pushing a git tag **`v<major>.<minor>.<patch>`** (owner only). CI
+  (`.github/workflows/build-plugin.yml`) builds the plugin, creates a GitHub Release, and publishes to
+  Marketplace. The version is derived from the tag via `-PpluginVersion`, so do NOT hand-edit
+  `<version>` in plugin.xml for releases.
+- The `release-gate` job enforces two rules: **only tag pushes by the repository owner** enter the
+  release flow, and **the tagged commit must be on `master`** — only owner + review-merged code can
+  be published.
 - **Never reuse a published version/tag** — Marketplace rejects duplicate versions; always bump to the next unused patch.
 - Plugin **signing is optional**. Keep the guarded `signPlugin` block in `waaagh/build.gradle.kts` (only sign
   when `CERTIFICATE_CHAIN` and `PRIVATE_KEY` are non-blank). Publishing unsigned is fine; do not make signing mandatory.
