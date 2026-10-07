@@ -4,7 +4,7 @@
 
 This repo is an **IntelliJ IDEA plugin** called *Waaagh* (Feign ↔ Controller navigator),
 living in `waaagh/` (Gradle, Kotlin DSL). `waaagh/sample/debug_openfeign/` is a **Maven** Spring Cloud
-sample project used as test-fixture data for the sandbox IDE.
+sample project used with the sandbox IDE.
 
 ### JDK requirement
 - Build with **JDK 11**. Gradle 7.4.2 does not support JDK 21.
@@ -14,7 +14,7 @@ sample project used as test-fixture data for the sandbox IDE.
   (`java-17-openjdk-amd64`) is the ideal project SDK for the `sample/debug_openfeign`
   fixture (it targets Java 17).
 
-### Sandbox sample project gotcha (important for `runIde` navigation demos)
+### Sandbox sample project gotcha (needed for the sample to resolve in `runIde`)
 When you open `waaagh/sample/debug_openfeign` inside the `runIde` sandbox IDE
 (IntelliJ IDEA Community **2021.2**), the initial Maven import **fails** with
 `NoSuchMethodError: org.apache.maven.model.validation.DefaultModelValidator.<init>()`.
@@ -40,19 +40,7 @@ no gutter icons/navigation targets appear.
 - Workflow `.github/workflows/build-plugin.yml` builds on PR / push to master.
 - Tag `v*` creates a GitHub Release with the zip; optional Marketplace publish via `PUBLISH_TOKEN`.
 
-### Demo navigation
-Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
-Also exercise **Go to Implementation** (`Ctrl+Alt+B`) and **Call Hierarchy** (`Ctrl+Alt+H`) on Feign methods.
-
-Inheritance fixture: **`TransportServiceApi`** (base interface, no `@FeignClient`) ← **`TransportService`**
-(empty `@FeignClient`) ↔ **`TransportServerController`** (`/hello/world/transport/...`).
-
-### Testing navigation/hierarchy changes (do not skip)
-When changing any navigation, matching, or Call Hierarchy logic, always verify **all** of these in the
-`runIde` sandbox (gutter navigation alone is NOT enough — Call Hierarchy has its own code paths and has
-regressed before):
-- Gutter icons + **`Ctrl+Alt+B`** (Go to Implementation) both directions (Feign→Controller and Controller→Feign).
-- **`Ctrl+Alt+H`** Call Hierarchy **both directions**: on a Feign method the **Callees** must list the
-  Controllers; on a Controller method the **Callers** must list the Feign clients.
-- The **Feign-inheritance** scenario above (endpoints declared on a base interface, `@FeignClient` on an
-  empty sub-interface) — check both gutter navigation and both Call Hierarchy directions.
+### Sample fixtures
+- Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
+- Inheritance: **`TransportServiceApi`** (base interface, no `@FeignClient`) ← **`TransportService`**
+  (empty `@FeignClient`) ↔ **`TransportServerController`** (`/hello/world/transport/...`).

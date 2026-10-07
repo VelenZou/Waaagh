@@ -6,7 +6,7 @@ alwaysApply: true
 # Release & JetBrains Marketplace conventions
 
 Apply whenever editing `waaagh/src/main/resources/META-INF/plugin.xml`, cutting a release, or
-touching the release pipeline. (Build/test conventions live in `AGENTS.md`.)
+touching the release pipeline. (Build/run conventions live in `AGENTS.md`.)
 
 ## Branding / naming
 - The brand is **WAAAGH!!!** — use it (with the `!!!`) in `README*.md` and in the plugin `<description>` prose.
