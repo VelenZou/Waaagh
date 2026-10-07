@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 运力服务端控制器，端点路径与 {@code TransportService}（继承自 {@code TransportServiceApi}）一一对应：
  * server.servlet.context-path=/hello + spring.mvc.servlet.path=/world + /transport/... 。
+ * <p>
+ * 预期匹配：TransportServiceApi#getTransportById（GET）、#vehicleEvent（POST）——完整路径通过 TransportService
+ * 的 path=/hello/world/transport 计算。
  */
 @RestController
 public class TransportServerController {

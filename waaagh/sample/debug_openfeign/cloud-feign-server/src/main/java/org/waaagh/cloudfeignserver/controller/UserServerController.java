@@ -7,6 +7,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.waaagh.cloudfeignapi.User;
 import org.waaagh.cloudfeignapi.UserApiConst;
 
+/**
+ * 演示 Controller，完整路径前缀 /hello/world/user（server.servlet.context-path=/hello + spring.mvc.servlet.path=/world）。
+ * <p>
+ * 预期匹配的 Feign 方法（路径 + HTTP 方法；下文 UserClient/2/4/5/6 表示对应客户端）：
+ * <ul>
+ *   <li>getUserById（DELETE /user/get/{id}）→ UserClient/2/4/5/6#getUserById + ListenerClient#delUsr、NullClient#deleUsr；</li>
+ *   <li>update、del、getfather → UserClient/2/4/5/6 的同名方法（GET）；</li>
+ *   <li>getmather、clipboard~clipboard4、optimizedCache~optimizedCache3、parallelScan~parallelScan5、parallelScan7
+ *       → UserClient2/4/5/6 的同名方法（GET）；</li>
+ *   <li>parallelScan8（路径 /user/parallelScan811/{id}）→ UserClient2/4/5/6#parallelScan8 + UserClient4/5/6#parallelScan811；</li>
+ *   <li>parallelScan9（路径来自 UserApiConst.USER_CLIENT_PARALLEL_SCAN9_ID）→ UserClient3#parallelScan8；</li>
+ *   <li>parallelScan10、parallelScan11 → UserClient4/5/6 的同名方法。</li>
+ * </ul>
+ */
 @RestController
 public class UserServerController {
 

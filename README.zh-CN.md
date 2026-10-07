@@ -26,6 +26,7 @@
 | **Go to Declaration** | `Ctrl+B` / `Ctrl+单击` 在 Feign 与 Controller 之间跳转 |
 | **Call Hierarchy** | Feign 方法把 Controller 显示为**被调用方**；Controller 方法把 Feign 显示为**调用方** |
 | 上下文路径 | 解析 `server.servlet.context-path` 与 `spring.mvc.servlet.path` |
+| 匹配规则 | 完整路径 + HTTP 请求方法；未指定方法的映射视为通配 |
 
 #### Hierarchy 是怎么接进去的
 
@@ -55,6 +56,8 @@ export JAVA_HOME=/path/to/jdk-11
 ## 示例工程
 
 `waaagh/sample/debug_openfeign/` 是一个 Maven 多模块示例工程。演示用的匹配对：**`UserClient` → `UserServerController`**（`/hello/world/user/...`）。
+
+HTTP 方法匹配有独立的验证对：**`MethodMatchClient` ↔ `MethodMatchServerController`**（`/hello/world/method/...`），应该匹配 / 不应匹配的对照表见 `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`。
 
 ## 参与贡献
 

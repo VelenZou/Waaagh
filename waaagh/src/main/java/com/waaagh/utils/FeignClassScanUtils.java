@@ -51,8 +51,9 @@ public class FeignClassScanUtils {
         if (Objects.isNull(controllerCache)) {
             return false;
         }
-        String path = controllerCache.getPath();
-        return StringUtils.equals(path, feignInfo.getPath());
+        // 路径相同 + HTTP 方法兼容（任一方未指定方法视为通配）
+        return StringUtils.equals(controllerCache.getPath(), feignInfo.getPath())
+                && controllerCache.isRequestMethodCompatibleWith(feignInfo);
     }
 
     /**

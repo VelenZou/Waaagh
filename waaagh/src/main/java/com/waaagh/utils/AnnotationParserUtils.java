@@ -11,9 +11,7 @@ import com.waaagh.enums.SpringCloudClassAnnotation;
 import com.waaagh.enums.SpringBootMethodAnnotation;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -218,14 +216,26 @@ public class AnnotationParserUtils {
         return null;
     }
 
+    /**
+     * 将 {@code RequestMethod} 枚举的常量名映射为标准 HTTP 方法名
+     * （GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS/TRACE）。
+     * 无法识别时返回 {@code null}，调用方按“未指定方法（通配）”处理。
+     */
+    @Nullable
     public static String getRequestMethodFromMethodName(String methodName) {
-        // 使用字典映射替代多个条件分支
-        Map<String, String> methodMappings = new HashMap<>();
-        methodMappings.put("GET", "GET");
-        methodMappings.put("POST", "POST");
-        methodMappings.put("PUT", "PUT");
-        methodMappings.put("DELETE", "DELETE");
-        return methodMappings.getOrDefault(methodName, "REQUEST");
+        switch (methodName) {
+            case "GET":
+            case "HEAD":
+            case "POST":
+            case "PUT":
+            case "PATCH":
+            case "DELETE":
+            case "OPTIONS":
+            case "TRACE":
+                return methodName;
+            default:
+                return null;
+        }
     }
 
     /**

@@ -8,6 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * 基础 API 接口（不带 @FeignClient），承载 @RequestMapping 端点方法。
  * 被 {@code TransportService}（@FeignClient）继承，用于验证“Feign 继承父接口”场景的跳转/层级能力。
+ * <p>
+ * 预期匹配（完整路径通过 TransportService 的 path=/hello/world/transport 计算）：
+ * <ul>
+ *   <li>getTransportById（GET /get/{id}）→ TransportServerController#getTransportById；</li>
+ *   <li>vehicleEvent（POST /vehicleEvent）→ TransportServerController#vehicleEvent。</li>
+ * </ul>
  */
 public interface TransportServiceApi {
 

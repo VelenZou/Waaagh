@@ -245,7 +245,8 @@ public class ControllerClassScanUtils {
     if (Objects.isNull(feignCache)) {
       return false;
     }
-    String feignPath = feignCache.getPath();
-    return StringUtils.equals(feignPath, controllerInfo.getPath());
+    // 路径相同 + HTTP 方法兼容（任一方未指定方法视为通配）
+    return StringUtils.equals(feignCache.getPath(), controllerInfo.getPath())
+        && controllerInfo.isRequestMethodCompatibleWith(feignCache);
   }
 }

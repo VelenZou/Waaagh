@@ -7,6 +7,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.waaagh.cloudfeignapi.User;
 import org.waaagh.feignclient.feign.config.UserConfiguration;
 
+/**
+ * 演示 Feign 客户端，完整路径前缀 /hello/world/user。
+ * <p>
+ * 预期匹配（路径 + HTTP 方法；下文 UserServerController/2/3 表示三个 UserServerController）：
+ * <ul>
+ *   <li>getUserById（DELETE /get/{id}）→ UserServerController/2/3 的 getUserById，
+ *       以及 ListenerServerController#getUserById、NullServerController#delb；</li>
+ *   <li>update、del、getfather、getmather、clipboard~clipboard4、optimizedCache~optimizedCache3、
+ *       parallelScan~parallelScan5、parallelScan7（GET）→ UserServerController/2/3 的同名方法；</li>
+ *   <li>parallelScan8（路径实为 /parallelScan811/{id}）→ UserServerController/2/3#parallelScan8。</li>
+ * </ul>
+ */
 // http://localhost:9000/consumer/feign/user/get/1
 @FeignClient(path = "/hello/world/user", value = "cloud-feign-server", contextId = "user", configuration = UserConfiguration.class)
 public interface UserClient2 {
