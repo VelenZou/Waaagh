@@ -1,8 +1,6 @@
 # WAAAGH!!! — Update Log
 
-Every line of this project (code + tests) is generated end to end by large language
-models; humans only provide ideas and final acceptance. Version history starts fresh
-under the WAAAGH!!! name.
+Version history starts fresh under the WAAAGH!!! name.
 
 ### 🚀 WAAAGH!!! v1.0.0 — Feign ↔ Controller Navigator
 

@@ -11,15 +11,6 @@ Install from the IDE (**Settings → Plugins → Marketplace**, search "WAAAGH")
 
 **WAAAGH!!!** is a collection of IntelliJ IDEA plugins. Popular tools in the collection may later be spun out as their own standalone plugins.
 
-## Why this project is different
-
-Every line in this project — production code **and** tests — is generated end to end by large language models. There is **no hand-written code and no human code review**. Humans do exactly two things:
-
-- throw ideas at the model, and
-- give the final thumbs-up on whether the result feels good enough to ship.
-
-That is the whole loop: **if it feels right, it ships** (“感觉可以就可以的那种感觉” — that gut-feel "yeah, this'll do" vibe). It is how a Warhammer Ork builds — grab whatever's lying around, kitbash it together, yell **WAAAGH!!!**, and somehow it runs. Hence the name.
-
 ## What's inside
 
 Right now the collection ships one tool.
@@ -64,6 +55,11 @@ Run sandbox IDE:
 ## Sample project
 
 `waaagh/sample/debug_openfeign/` is a Maven multi-module fixture. Matching pair for demos: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
+
+## Contributing
+
+Bug reports, feature requests and pull requests are welcome — please
+[open an issue](https://github.com/velenzou/waaagh/issues) or submit a PR.
 
 ## License
 

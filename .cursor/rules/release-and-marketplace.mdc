@@ -18,9 +18,9 @@ touching the release pipeline. (Build/test conventions live in `AGENTS.md`.)
 - MUST start with Latin characters and be at least 40 characters → put the **English block first**, then the Chinese block.
 - Keep it **bilingual** with a clear split: a `<b>English</b>` section and a `<b>中文</b>` section,
   separated by a blank line (`<br><br>`). Do NOT use `<hr>` as the divider — the Marketplace renderer strips it.
-- Tagline, verbatim: **「感觉可以就可以的那种感觉」** (never the shortened "感觉可以就可以").
-- Positioning: an AI-generated IntelliJ IDEA **plugin collection** — all code and tests generated end to end
-  by large language models, no hand-written code and no human code review; humans only give ideas + final acceptance.
+- Positioning: an IntelliJ IDEA **plugin collection**; popular tools may later be spun out as
+  standalone plugins. Keep the description focused on features and usage — do not add statements
+  about how the code is written or maintained.
 
 ## `<change-notes>` (Marketplace "What's New")
 - List **only user-facing feature/behavior changes**.
