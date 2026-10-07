@@ -26,6 +26,7 @@ Navigates between Spring Cloud `@FeignClient` methods and matching `@RestControl
 | **Go to Declaration** | `Ctrl+B` / Ctrl+Click between Feign and Controller |
 | **Call Hierarchy** | Feign methods show Controllers as **callees**; Controller methods show Feign clients as **callers** |
 | Context path | Parses `server.servlet.context-path` and `spring.mvc.servlet.path` |
+| Path prefix | Parses package-based prefixes registered via `PathMatchConfigurer#addPathPrefix`; matching and copied URLs include them |
 | Matching | Full path + HTTP method; a mapping without an explicit method matches any |
 
 #### How Hierarchy is wired
@@ -58,6 +59,8 @@ Run sandbox IDE:
 `waaagh/sample/debug_openfeign/` is a Maven multi-module fixture. Matching pair for demos: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
 
 HTTP method matching has its own verification pair: **`MethodMatchClient` ↔ `MethodMatchServerController`** (`/hello/world/method/...`). The expected match / no-match matrix lives in `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
+
+Package-based path prefixes (`PathMatchConfigurer#addPathPrefix`) have their own fixtures: **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** (`/hello/world/v2/...`, `/hello/world/v3/...`), with a negative client missing the prefix. See `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.
 
 ## Contributing
 
