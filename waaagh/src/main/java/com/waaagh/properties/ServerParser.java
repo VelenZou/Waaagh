@@ -1,6 +1,7 @@
 package com.waaagh.properties;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
@@ -24,10 +25,13 @@ public class ServerParser {
     private static PsiDirectory getModuleRootDirectory(PsiClass feignClientClass, Project project) {
         PsiDirectory currentDirectory = feignClientClass.getContainingFile().getContainingDirectory();
 
+        // 项目根目录（Project#getBaseDir() 已弃用，改用 ProjectUtil.guessProjectDir；2020.3+ 可用）
+        VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+
         // 向上查找，直到找到包含 src 目录的模块根目录，或达到项目根目录
         while (currentDirectory != null) {
             VirtualFile parentDir = currentDirectory.getVirtualFile().getParent();
-            if (parentDir == null || parentDir.equals(project.getBaseDir())) {
+            if (parentDir == null || parentDir.equals(projectDir)) {
                 break; // 已经达到项目根目录，停止查找
             }
 

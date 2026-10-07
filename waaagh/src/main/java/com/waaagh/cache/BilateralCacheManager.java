@@ -6,13 +6,11 @@ import com.waaagh.entity.HttpMappingInfo;
 import com.waaagh.utils.AnnotationParserUtils;
 import com.waaagh.utils.ControllerClassScanUtils;
 import com.waaagh.utils.FeignClassScanUtils;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.commons.collections.MapUtils;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -23,11 +21,12 @@ public class BilateralCacheManager {
 
   // 缓存controller接口数据
   // <projectid, <classpath+methodname, HttpMappingInfo>>
-  private static final Map<String, Map<String, HttpMappingInfo>> PROJECT_CONTROLLER_CACHE_MAP = new HashMap<>();
+  // 并发容器：查询发生在高亮/导航线程，清理发生在项目关闭或 VFS 变更事件线程
+  private static final Map<String, Map<String, HttpMappingInfo>> PROJECT_CONTROLLER_CACHE_MAP = new ConcurrentHashMap<>();
 
   // 缓存Feign接口数据
   // <projectid, <classpath+methodname, HttpMappingInfo>>
-  private static final Map<String, Map<String, HttpMappingInfo>> PROJECT_FEIGN_CACHE_MAP = new HashMap<>();
+  private static final Map<String, Map<String, HttpMappingInfo>> PROJECT_FEIGN_CACHE_MAP = new ConcurrentHashMap<>();
 
   // 是否已完成过全量扫描。
   // 注意：缓存的单个方法条目可能来自 setOrCoverXxxCache 的按需补全，
@@ -36,72 +35,53 @@ public class BilateralCacheManager {
   private static final Set<String> PROJECT_FEIGN_FULLY_SCANNED = ConcurrentHashMap.newKeySet();
 
   /**
-   * 清除指定项目的所有缓存
+   * 清除指定项目的所有缓存。
+   * 调用方：项目关闭（CacheCleanListener）、源码文件保存/外部修改后（VfsCacheRefreshListener）。
    */
   public static void clear(Project project) {
-    String projectId = project.getBasePath();
+    String projectId = getProjectId(project);
     PROJECT_CONTROLLER_CACHE_MAP.remove(projectId);
     PROJECT_FEIGN_CACHE_MAP.remove(projectId);
-    if (projectId != null) {
-      PROJECT_CONTROLLER_FULLY_SCANNED.remove(projectId);
-      PROJECT_FEIGN_FULLY_SCANNED.remove(projectId);
-    }
+    PROJECT_CONTROLLER_FULLY_SCANNED.remove(projectId);
+    PROJECT_FEIGN_FULLY_SCANNED.remove(projectId);
   }
 
   public static boolean isControllerFullyScanned(Project project) {
-    String projectId = project.getBasePath();
-    return projectId != null && PROJECT_CONTROLLER_FULLY_SCANNED.contains(projectId);
+    return PROJECT_CONTROLLER_FULLY_SCANNED.contains(getProjectId(project));
   }
 
   public static void markControllerFullyScanned(Project project) {
-    String projectId = project.getBasePath();
-    if (projectId != null) {
-      PROJECT_CONTROLLER_FULLY_SCANNED.add(projectId);
-    }
+    PROJECT_CONTROLLER_FULLY_SCANNED.add(getProjectId(project));
   }
 
   public static boolean isFeignFullyScanned(Project project) {
-    String projectId = project.getBasePath();
-    return projectId != null && PROJECT_FEIGN_FULLY_SCANNED.contains(projectId);
+    return PROJECT_FEIGN_FULLY_SCANNED.contains(getProjectId(project));
   }
 
   public static void markFeignFullyScanned(Project project) {
-    String projectId = project.getBasePath();
-    if (projectId != null) {
-      PROJECT_FEIGN_FULLY_SCANNED.add(projectId);
-    }
+    PROJECT_FEIGN_FULLY_SCANNED.add(getProjectId(project));
   }
 
   /**
    * 获取所有的controller缓存
    */
   public static Map<String, HttpMappingInfo> queryControllerCaches(Project project) {
-    // 以项目路径作为唯一标识符
-    String projectId = project.getBasePath();
-    return PROJECT_CONTROLLER_CACHE_MAP.get(projectId);
+    return PROJECT_CONTROLLER_CACHE_MAP.get(getProjectId(project));
   }
 
   /**
    * 获取所有的feign缓存
    */
   public static Map<String, HttpMappingInfo> queryFeignCaches(Project project) {
-    // 以项目路径作为唯一标识符
-    String projectId = project.getBasePath();
-    return PROJECT_FEIGN_CACHE_MAP.get(projectId);
+    return PROJECT_FEIGN_CACHE_MAP.get(getProjectId(project));
   }
 
   /**
    * 初始化controller缓存
    */
   public static void initControllerCaches(Project project, List<HttpMappingInfo> controllerCaches) {
-    // 以项目路径作为唯一标识符
-    String projectId = project.getBasePath();
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.get(projectId);
-
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_CONTROLLER_CACHE_MAP.put(projectId, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.computeIfAbsent(
+        getProjectId(project), k -> new ConcurrentHashMap<>());
     for (HttpMappingInfo controller : controllerCaches) {
       String qualifier = buildKey(controller.getPsiMethod());
       qualifier2Info.put(qualifier, controller);
@@ -112,12 +92,8 @@ public class BilateralCacheManager {
    * 初始化feign缓存
    */
   public static void initFeignCaches(Project project, List<HttpMappingInfo> feignCaches) {
-    String projectId = project.getBasePath(); // 以项目路径作为唯一标识符
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.get(projectId);
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_FEIGN_CACHE_MAP.put(projectId, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.computeIfAbsent(
+        getProjectId(project), k -> new ConcurrentHashMap<>());
     for (HttpMappingInfo feign : feignCaches) {
       String qualifier = buildKey(feign.getPsiMethod());
       qualifier2Info.put(qualifier, feign);
@@ -130,14 +106,9 @@ public class BilateralCacheManager {
   public static HttpMappingInfo setFeignCache(PsiMethod feignMethod) {
     Project project = feignMethod.getProject();
 
-    String basePath = project.getBasePath();
     //此时有可能先于feign全扫描，所以feign缓存有可能为空
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.get(basePath);
-    //下面防空NPE
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_FEIGN_CACHE_MAP.put(basePath, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.computeIfAbsent(
+        getProjectId(project), k -> new ConcurrentHashMap<>());
     String qualifier = buildKey(feignMethod);
     HttpMappingInfo feignInfo = null;
     //在用户打注释/***/期间，psiMethod会有一瞬间不再拥有注解，此时HttpMappingInfo.of将返回为空, 注意避免HashMap的value为空的情况
@@ -156,13 +127,8 @@ public class BilateralCacheManager {
     if (!AnnotationParserUtils.containsRestfulAnnotation(feignMethod)) {
       return null;
     }
-    String basePath = feignMethod.getProject().getBasePath();
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.get(basePath);
-    // 下面防空NPE
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_FEIGN_CACHE_MAP.put(basePath, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_FEIGN_CACHE_MAP.computeIfAbsent(
+        getProjectId(feignMethod.getProject()), k -> new ConcurrentHashMap<>());
     String qualifier = buildKey(feignMethod);
     if (Objects.isNull(qualifier2Info.get(qualifier))) {
       setFeignCache(feignMethod);
@@ -177,13 +143,8 @@ public class BilateralCacheManager {
     if (!AnnotationParserUtils.containsRestfulAnnotation(controllerMethod)) {
       return null;
     }
-    String basePath = controllerMethod.getProject().getBasePath();
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.get(basePath);
-    // 下面防空NPE
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_CONTROLLER_CACHE_MAP.put(basePath, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.computeIfAbsent(
+        getProjectId(controllerMethod.getProject()), k -> new ConcurrentHashMap<>());
     String qualifier = buildKey(controllerMethod);
     if (Objects.isNull(qualifier2Info.get(qualifier))) {
       setControllerCache(controllerMethod);
@@ -197,14 +158,9 @@ public class BilateralCacheManager {
   public static HttpMappingInfo setControllerCache(PsiMethod controllerMethod) {
     Project project = controllerMethod.getProject();
 
-    String basePath = project.getBasePath();
     // 此时有可能先于controller全扫描，所以controller缓存有可能为空
-    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.get(basePath);
-    // 下面防空NPE
-    if (MapUtils.isEmpty(qualifier2Info)) {
-      qualifier2Info = new HashMap<>();
-      PROJECT_CONTROLLER_CACHE_MAP.put(basePath, qualifier2Info);
-    }
+    Map<String, HttpMappingInfo> qualifier2Info = PROJECT_CONTROLLER_CACHE_MAP.computeIfAbsent(
+        getProjectId(project), k -> new ConcurrentHashMap<>());
     String qualifier = buildKey(controllerMethod);
     // 在用户打注释/***/期间，psiMethod会有一瞬间不再拥有注解，此时HttpMappingInfo.of将返回为空, 注意避免HashMap的value为空的情况
     HttpMappingInfo controllerInfo = null;

@@ -30,17 +30,29 @@
 
 ## 既有 fixtures 速查
 
-既有示例的逐类匹配关系写在各类的 Javadoc 注释里（打开类文件即可对照），要点：
+逐类的预期匹配写在各类的 Javadoc 注释里（打开类文件即可对照）。要点：
 
-- `/hello/world/user/**`（GET/DELETE 同名匹配）：
-  - `UserClient`、`UserClient2`、`UserClient4`、`UserClient5`、`UserClient6` ↔ `UserServerController`、`UserServerController2`、`UserServerController3` 的同名方法；
-  - `getUserById`（DELETE `/user/get/{id}`）额外匹配 `ListenerServerController#getUserById`、`NullServerController#delb`；`ListenerClient#delUsr`、`NullClient#deleUsr` 也在这组里（7 个 Feign 方法 × 5 个 Controller 方法）；
-  - 特例：`UserClient3#parallelScan8`（常量路径 `/user/parallelScan9/{id}`）↔ `UserServerController/2/3#parallelScan9`；`UserClient6#updateeeee` ↔ `UserServerController2/3#updateeeee`；`parallelScan12` 无对应 Controller；`test`/`tets` 与 `parallelScan5` 同路径；`parallelScan8`/`parallelScan811` 同路径；`parallelScan10`/`parallelScan11` 只有 `UserServerController`；
-  - `ListenerClient#deleUsr` 没有 Rest 注解，不参与匹配。
-- 继承场景：`TransportServiceApi`（父接口）↔ `TransportServerController`，经 `TransportService`（path=/hello/world/transport）计算完整路径；GET 对 GET、POST 对 POST。
+- **基础对（一方法多目标）**：`UserClient#getUserById`、`UserDeleteClient#getUserById`
+  （DELETE `/hello/world/user/get/{id}`）↔ `UserServerController#getUserById`、
+  `DuplicateUserServerController#getUserById`、`UserDeleteAliasController#deleteUser`
+  （3 个目标；`UserDeleteAliasController` 类名/方法名都与客户端不同，验证匹配只看路径 + HTTP 方法）；
+- **方法名 ≠ 路径**：`UserClient#update` → `/user/update2/{id}`，仍匹配 `UserServerController#update`、
+  `DuplicateUserServerController#update`；
+- **同路径多方法**：`UserClientSamePaths#samePathFirst` / `#samePathSecond` → 都指向
+  `UserServerController#samePath`；`twinFirst` / `twinSecond` → 都指向 `UserServerController#twinFirst`；
+- **无目标（负向）**：`UserClientSamePaths#clientOnly` 没有对应 Controller，不应出现图标；
+- **路径常量**：`UserClientConstantPath`（`@FeignClient(path = UserApiPaths.CLIENT_BASE)`）↔
+  `UserServerController#constantPath`（`@GetMapping(UserApiPaths.CONSTANT_PATH)`，`/user/const/{id}`）；
+- **Feign 继承**：`InheritanceApi`（父接口，无 `@FeignClient`）← `InheritanceFeignClient`
+  （`@FeignClient` 子接口）↔ `InheritanceServerController`（GET `/inheritance/get/{id}`、
+  POST `/inheritance/save`）；
+- **重复映射（服务端）**：`OrderServerController` 的 `getOrderById` / `getOrderByIdAlias` 映射完全相同
+  （GET `/hello/world/prefix/order/get/{id}`）；
 - ❌ 不匹配：
-  - `OrderClient` / `Order2Client` ↔ `OrderServerController` / `Order2ServerController`：客户端缺 `/hello/world` 前缀（如需演示匹配，补 `path = "/hello/world"`）；
-  - `UserClientController`、`OrderClientController`、`TestClientController`：消费者 Controller，没有对应的 Feign 端点。
+  - `OrderClientMissingContextPath` ↔ `OrderServerController`：客户端缺 `/hello/world` 前缀
+    （如需演示匹配，补 `path = "/hello/world"`）；
+  - `V2UserClientMissingPrefix`：缺 `/v2` 前缀负例，见 `PATH_PREFIX_MATCHING.md`；
+  - `UserClientController`、`OrderClientController`：消费者 Controller，没有对应的 Feign 端点。
 
 ## 怎么测
 

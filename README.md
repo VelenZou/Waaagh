@@ -42,11 +42,11 @@ Requires **JDK 25** (Gradle 9.7.1 + IntelliJ Platform Gradle Plugin 2.19, target
 
 ```bash
 cd waaagh
-export JAVA_HOME=/path/to/jdk-11
+export JAVA_HOME=/path/to/jdk-25
 ./gradlew buildPlugin
 ```
 
-Output: `waaagh/build/distributions/waaagh-1.0.0.zip`
+Output: `waaagh/build/distributions/waaagh-1.1.0.zip`
 
 Run sandbox IDE:
 
@@ -58,9 +58,11 @@ Run sandbox IDE:
 
 `waaagh/sample/debug_openfeign/` is a Maven multi-module fixture. Matching pair for demos: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
 
+Shape cases live next to it: **`UserDeleteClient`** (a second caller), **`UserClientSamePaths`** (same-path aliases + a client with no target), **`UserClientConstantPath`** (paths via constants) ↔ **`DuplicateUserServerController`** / **`UserDeleteAliasController`** (deliberately duplicated mappings); inheritance **`InheritanceApi` ← `InheritanceFeignClient`** ↔ **`InheritanceServerController`**; server-side negative **`OrderClientMissingContextPath`**. Full list: `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
+
 HTTP method matching has its own verification pair: **`MethodMatchClient` ↔ `MethodMatchServerController`** (`/hello/world/method/...`). The expected match / no-match matrix lives in `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
 
-Package-based path prefixes (`PathMatchConfigurer#addPathPrefix`) have their own fixtures: **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** (`/hello/world/v2/...`, `/hello/world/v3/...`), with a negative client missing the prefix. See `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.
+Package-based path prefixes (`PathMatchConfigurer#addPathPrefix`) have their own fixtures: **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** (`/hello/world/v2/...`, `/hello/world/v3/...`), with a negative client missing the prefix (`V2UserClientMissingPrefix`). See `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.
 
 ## Contributing
 
