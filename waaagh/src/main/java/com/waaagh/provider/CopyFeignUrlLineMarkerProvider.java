@@ -16,16 +16,14 @@ import com.intellij.psi.PsiMethod;
 import com.waaagh.cache.BilateralCacheManager;
 import com.waaagh.constant.RestIcons;
 import com.waaagh.entity.HttpMappingInfo;
-import com.waaagh.recover.SmartPsiElementRecover;
 import com.waaagh.utils.AnnotationParserUtils;
 import com.waaagh.utils.FeignClassScanUtils;
 import com.waaagh.utils.ProjectUtils;
+import java.awt.datatransfer.StringSelection;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.awt.datatransfer.StringSelection;
-import java.util.Objects;
 
 /**
  * @Author: hmly

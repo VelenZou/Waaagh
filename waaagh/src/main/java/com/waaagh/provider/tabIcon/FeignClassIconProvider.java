@@ -12,13 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @Author: liuyanoutsee@outlook.com
- * @Date: 2025/4/2 20:34
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: FeignClient文件图标
- */
 public class FeignClassIconProvider extends IconProvider {
     /**
      * FeignClient文件图标

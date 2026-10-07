@@ -30,15 +30,10 @@ intellij {
 }
 
 dependencies {
-//    implementation("com.softwareloop:mybatis-generator-lombok-plugin:1.0")
     compileOnly("org.projectlombok:lombok:1.18.22")
     implementation("org.yaml:snakeyaml:1.29")
     implementation("org.apache.commons:commons-lang3:3.12.0")
-    // Bundle commons-collections: older IDEs provided it on the plugin classpath, but newer
-    // platforms (e.g. 2026.2) do not, causing NoClassDefFoundError for org.apache.commons.collections.*
     implementation("commons-collections:commons-collections:3.2.2")
-//    annotationProcessor("org.projectlombok:lombok:1.18.2");
-//    testAnnotationProcessor("org.projectlombok:lombok:1.18.2");
 }
 
 tasks {

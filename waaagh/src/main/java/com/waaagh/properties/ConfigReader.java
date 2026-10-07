@@ -3,43 +3,27 @@ package com.waaagh.properties;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.InputStream;
-
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.yaml.snakeyaml.Yaml;
 
-
-/**
- * @Description: 项目初始化阶段配置文件读取与解析
- * @Author: lyflexi
- * @project: waaagh
- * @Date: 2024/11/3 15:01 
- */
 
 public class ConfigReader {
-    //支持配置文件解析1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
+    // 支持配置文件解析1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
     private static final String PROPERTIES_FILE_NAME = "application.properties";
     private static final String PROPERTIES_BOOTSTRAP_FILE_NAME = "bootstrap.properties";
     private static final String YML_FILE_NAME = "application.yml";
     private static final String YAML_FILE_NAME = "application.yaml";
 
-    //支持nacos场景，1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
+    // 支持nacos场景，1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
     // @geasscai https://github.com/Halfmoonly/waaagh/pull/9
     private static final String YML_BOOTSTRAP_FILE_NAME = "bootstrap.yml";
-    //支持nacos场景，1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
+    // 支持nacos场景，1.server.servlet.context-path and 2.spring.mvc.servlet.path仅存在于bootstrap.yml
     // @geasscai https://github.com/Halfmoonly/waaagh/pull/9
     private static final String YAML_BOOTSTRAP_FILE_NAME = "bootstrap.yaml";
 
-
-    /**
-     * 读取properties
-     * @param moduleDirectory
-     * @return
-     */
     public static Properties readProperties(PsiDirectory moduleDirectory) {
         Properties properties1 = readPropertiesFromFile(moduleDirectory, PROPERTIES_FILE_NAME);
         Properties properties2 = readPropertiesFromFile(moduleDirectory, PROPERTIES_BOOTSTRAP_FILE_NAME);
@@ -59,12 +43,6 @@ public class ConfigReader {
         return mergedProperties;
     }
 
-
-    /**
-     * 读取yml
-     * @param moduleDirectory
-     * @return
-     */
     public static Map<String, Object> readYmlOrYaml(PsiDirectory moduleDirectory) {
         // 读取每个 YAML 文件的内容到对应的 Map 中
 
@@ -93,12 +71,6 @@ public class ConfigReader {
         return mergedYamlData;
     }
 
-    /**
-     * 解析出properties中的属性
-     * @param moduleDirectory
-     * @param fileName
-     * @return
-     */
     private static Properties readPropertiesFromFile(PsiDirectory moduleDirectory, String fileName) {
         Properties properties = new Properties();
         VirtualFile[] files = findFilesByName(moduleDirectory, fileName);
@@ -113,12 +85,6 @@ public class ConfigReader {
         return properties;
     }
 
-    /**
-     * 解析出yml中的属性
-     * @param moduleDirectory
-     * @param fileName
-     * @return
-     */
     private static Map<String, Object> readYmlFromFile(PsiDirectory moduleDirectory, String fileName) {
         Yaml yaml = new Yaml();
         VirtualFile[] files = findFilesByName(moduleDirectory, fileName);

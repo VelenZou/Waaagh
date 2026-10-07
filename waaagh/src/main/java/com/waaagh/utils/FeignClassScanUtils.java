@@ -15,13 +15,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @Author: hmly
- * @Date: 2025/3/14 20:51
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: feign类扫描工具类
- */
 public class FeignClassScanUtils {
     // 初始化PsiClass缓存管理器
     private static final InitialPsiClassCacheManager initialPsiClassCacheManager = InitialPsiClassCacheManager.getInstance();
@@ -64,7 +57,6 @@ public class FeignClassScanUtils {
         String path = controllerCache.getPath();
         return StringUtils.equals(path, feignInfo.getPath());
     }
-
 
     /**
      * 扫描Feign接口信息添加到缓存里面
