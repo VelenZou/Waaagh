@@ -217,9 +217,9 @@ public class ProjectUtils {
 
 
   /**
-   * 检查元素（PsiMethod或者PsiClass）是纯粹的业务文件，而非三方源码，用于过滤所有的Provider监听
+   * 检查元素是否是纯粹的业务文件，而非三方源码
    **/
-  public static Boolean isBizElement(PsiElement element) {
+  public static boolean isBizElement(PsiElement element) {
     if (element == null) {
       return false;
     }
@@ -229,13 +229,13 @@ public class ProjectUtils {
       return false;
     }
 
-    //element所属的文件
+    // 所属文件
     VirtualFile virtualFile = element.getContainingFile().getVirtualFile();
     if (virtualFile == null) {
       return false;
     }
 
-    // 首先检查是否是Java文件。
+    // 首先检查是否是 Java 文件。
     String fileName = virtualFile.getName();
     if (!fileName.endsWith(".java")) {
       return false;

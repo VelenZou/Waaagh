@@ -1,5 +1,7 @@
 package com.waaagh.provider;
 
+import static com.waaagh.constant.RestIcons.STATEMENT_LINE_CLIPBOARD_CONTROLLER_ICON;
+
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.GutterName;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
@@ -25,98 +27,78 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @Author: hmly
- * @Date: 2025/3/9 17:42
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: 将拷贝功能的Gutter挂在注解上
- */
 
-/*
- * 复制操作不属于RelatedItemLineMarkerProvider，IntelliJ 平台在新版 SDK 中推荐实现LineMarkerProviderDescriptor
- *
- * 1. 实现接口：LineMarkerProviderDescriptor
- * 2. 自定义构造LineMarkerInfo<PsiElement>：由于点击图标时执行复制操作不属于跳转导航操作NavigationGutterIconBuilder，而是需要手动构建 LineMarkerInfo
- *
- *
- * */
 public class CopyControllerUrlLineMarkerProvider extends LineMarkerProviderDescriptor {
 
-    @Override
-    public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
-        if (null==element) {
-            return null;
-        }
-        //排除三方依赖扫描
-        if (!ProjectUtils.isBizElement(element)){
-            return null;
-        }
-        Project project = element.getProject();
-        if (DumbService.isDumb(project)) {
-            return null; // 索引未完成，跳过
-        }
-        if (!(element instanceof PsiMethod)) {
-            return null;
-        }
-
-        PsiMethod method = (PsiMethod) element;
-
-        // 增加有效性校验
-        if (null == method || !method.isValid()) {
-            return null;
-        }
-        if (!AnnotationParserUtils.isElementWithinController(method)) {
-            return null;
-        }
-
-        //解析restfull注解，下面gutter挂在注解旁
-        PsiAnnotation restfulAnnotation = AnnotationParserUtils.findRestfulAnnotation(method);
-        if (Objects.isNull(restfulAnnotation)) {
-            return null;
-        }
-
-        //初始化所有的controller缓存
-        ControllerClassScanUtils.scanControllerPaths(method.getProject());
-
-        HttpMappingInfo controllerCache = BilateralCacheManager.setOrCoverControllerCache(method);
-
-        if (Objects.isNull(controllerCache)) {
-            return null;
-        }
-
-        String url = controllerCache.getPath();
-        if (StringUtils.isBlank(url)) {
-            return null;
-        }
-
-
-        PsiMethod finalMethod = method;
-        GutterIconNavigationHandler<PsiElement> handler = (mouseEvent, elt) -> {
-            CopyPasteManager.getInstance().setContents(new StringSelection(url));
-            NotificationGroupManager.getInstance()
-                    .getNotificationGroup("Waaagh")
-                    .createNotification("URL Copied To Clipboard:\n" + url, NotificationType.INFORMATION)
-                    .notify(finalMethod.getProject());
-        };
-
-        // 构建图标信息，挂在方法上
-        LineMarkerInfo<PsiElement> marker = new LineMarkerInfo<>(
-                restfulAnnotation,
-                restfulAnnotation.getTextRange(),
-                RestIcons.STATEMENT_LINE_CLIPBOARD_CONTROLLER_ICON,
-                psi -> "Click To Copy Controller-URL: " + url,
-                handler,
-                GutterIconRenderer.Alignment.RIGHT,
-                () -> "Copy Controller URL"
-        );
-
-        return marker;
+  @Override
+  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
+    // 排除三方依赖扫描
+    if (!ProjectUtils.isBizElement(element)) {
+      return null;
     }
 
-
-    @Override
-    public @Nullable("null means disabled") @GutterName String getName() {
-        return "Copy Controller URL";
+    Project project = element.getProject();
+    if (DumbService.isDumb(project)) {
+      return null; // 索引未完成，跳过
     }
+
+    if (!(element instanceof PsiMethod)) {
+      return null;
+    }
+
+    PsiMethod method = (PsiMethod) element;
+    if (!method.isValid()) {
+      return null;
+    }
+
+    if (!AnnotationParserUtils.isElementWithinController(method)) {
+      return null;
+    }
+
+    // 解析 restfull 注解，下面 gutter 挂在注解旁
+    PsiAnnotation restfulAnnotation = AnnotationParserUtils.findRestfulAnnotation(method);
+    if (Objects.isNull(restfulAnnotation)) {
+      return null;
+    }
+
+    // 初始化所有的 controller 缓存
+    ControllerClassScanUtils.scanControllerPaths(method.getProject());
+
+    HttpMappingInfo controllerCache = BilateralCacheManager.setOrCoverControllerCache(method);
+    if (Objects.isNull(controllerCache)) {
+      return null;
+    }
+
+    String url = controllerCache.getPath();
+    if (StringUtils.isBlank(url)) {
+      return null;
+    }
+
+    PsiMethod finalMethod = method;
+    GutterIconNavigationHandler<PsiElement> handler = (mouseEvent, elt) -> {
+      CopyPasteManager.getInstance().setContents(new StringSelection(url));
+      NotificationGroupManager.getInstance()
+          .getNotificationGroup("Waaagh")
+          .createNotification("URL Copied To Clipboard:\n" + url, NotificationType.INFORMATION)
+          .notify(finalMethod.getProject());
+    };
+
+    // 构建图标信息，挂在方法上
+    LineMarkerInfo<PsiElement> marker = new LineMarkerInfo<>(
+        restfulAnnotation,
+        restfulAnnotation.getTextRange(),
+        STATEMENT_LINE_CLIPBOARD_CONTROLLER_ICON,
+        psi -> "Click To Copy Controller-URL: " + url,
+        handler,
+        GutterIconRenderer.Alignment.RIGHT,
+        () -> "Copy Controller URL"
+    );
+
+    return marker;
+  }
+
+  @Override
+  public @Nullable("null means disabled") @GutterName String getName() {
+    return "Copy Controller URL";
+  }
 }
