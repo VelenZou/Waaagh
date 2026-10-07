@@ -25,97 +25,82 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @Author: hmly
- * @Date: 2025/3/9 17:42
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: 将拷贝功能的Gutter挂在注解上
- */
 
-/*
- * 复制操作不属于RelatedItemLineMarkerProvider，IntelliJ 平台在新版 SDK 中推荐实现LineMarkerProviderDescriptor
- *
- * 1. 实现接口：LineMarkerProviderDescriptor
- * 2. 自定义构造LineMarkerInfo<PsiElement>：由于点击图标时执行复制操作不属于跳转导航操作NavigationGutterIconBuilder，而是需要手动构建 LineMarkerInfo
- *
- * */
 public class CopyFeignUrlLineMarkerProvider extends LineMarkerProviderDescriptor {
 
-    @Override
-    public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
-        if (null==element) {
-            return null;
-        }
-        //排除三方依赖扫描
-        if (!ProjectUtils.isBizElement(element)){
-            return null;
-        }
-        Project project = element.getProject();
-        if (DumbService.isDumb(project)) {
-            return null; // 索引未完成，跳过
-        }
-        if (!(element instanceof PsiMethod)) {
-            return null;
-        }
-
-        PsiMethod method = (PsiMethod) element;
-
-        // 增加有效性校验
-        if (null == method || !method.isValid()) {
-            return null;
-        }
-
-        // 判断是不是 Feign 方法
-        if (!AnnotationParserUtils.isElementWithinFeign(element)) {
-            return null;
-        }
-
-        //解析restfull注解，下面gutter挂在注解旁
-        PsiAnnotation restfulAnnotation = AnnotationParserUtils.findRestfulAnnotation(method);
-        if (Objects.isNull(restfulAnnotation)) {
-            return null;
-        }
-
-        //提前初始化feign接口缓存
-        FeignClassScanUtils.scanFeignInterfaces(method.getProject());
-
-        // 获取拼接后的 Feign URL
-        HttpMappingInfo feignCache = BilateralCacheManager.setOrCoverFeignCache(method);
-        if (Objects.isNull(feignCache)) {
-            return null;
-        }
-        String url = feignCache.getPath();
-
-        if (StringUtils.isBlank(url)) {
-            return null;
-        }
-
-        // 构建图标点击逻辑
-        PsiMethod finalMethod = method;
-        GutterIconNavigationHandler<PsiElement> handler = (mouseEvent, elt) -> {
-            CopyPasteManager.getInstance().setContents(new StringSelection(url));
-            NotificationGroupManager.getInstance()
-                    .getNotificationGroup("Waaagh")
-                    .createNotification("URL Copied To Clipboard:\n" + url, NotificationType.INFORMATION)
-                    .notify(finalMethod.getProject());
-        };
-        // 构建图标信息，挂在方法上
-        LineMarkerInfo<PsiElement> marker = new LineMarkerInfo<>(
-                restfulAnnotation,
-                restfulAnnotation.getTextRange(),
-                RestIcons.STATEMENT_LINE_CLIPBOARD_FEIGN_ICON,
-                psi -> "Click To Copy Feign-URL: " + url,
-                handler,
-                GutterIconRenderer.Alignment.RIGHT,
-                () -> "Copy Feign URL"
-        );
-
-        return marker;
+  @Override
+  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
+    // 排除三方依赖扫描
+    if (!ProjectUtils.isBizElement(element)) {
+      return null;
     }
 
-    @Override
-    public @Nullable @GutterName String getName() {
-        return "Copy Feign URL";
+    Project project = element.getProject();
+    if (DumbService.isDumb(project)) {
+      return null; // 索引未完成，跳过
     }
+
+    if (!(element instanceof PsiMethod)) {
+      return null;
+    }
+
+    PsiMethod method = (PsiMethod) element;
+
+    // 增加有效性校验
+    if (!method.isValid()) {
+      return null;
+    }
+
+    // 判断是不是 Feign 方法
+    if (!AnnotationParserUtils.isElementWithinFeign(element)) {
+      return null;
+    }
+
+    // 解析restfull注解，下面 gutter 挂在注解旁
+    PsiAnnotation restfulAnnotation = AnnotationParserUtils.findRestfulAnnotation(method);
+    if (Objects.isNull(restfulAnnotation)) {
+      return null;
+    }
+
+    // 提前初始化feign接口缓存
+    FeignClassScanUtils.scanFeignInterfaces(method.getProject());
+
+    // 获取拼接后的 Feign URL
+    HttpMappingInfo feignCache = BilateralCacheManager.setOrCoverFeignCache(method);
+    if (Objects.isNull(feignCache)) {
+      return null;
+    }
+    String url = feignCache.getPath();
+
+    if (StringUtils.isBlank(url)) {
+      return null;
+    }
+
+    // 构建图标点击逻辑
+    PsiMethod finalMethod = method;
+    GutterIconNavigationHandler<PsiElement> handler = (mouseEvent, elt) -> {
+      CopyPasteManager.getInstance().setContents(new StringSelection(url));
+      NotificationGroupManager.getInstance()
+          .getNotificationGroup("Waaagh")
+          .createNotification("URL Copied To Clipboard:\n" + url, NotificationType.INFORMATION)
+          .notify(finalMethod.getProject());
+    };
+    // 构建图标信息，挂在方法上
+    LineMarkerInfo<PsiElement> marker = new LineMarkerInfo<>(
+        restfulAnnotation,
+        restfulAnnotation.getTextRange(),
+        RestIcons.STATEMENT_LINE_CLIPBOARD_FEIGN_ICON,
+        psi -> "Click To Copy Feign-URL: " + url,
+        handler,
+        GutterIconRenderer.Alignment.RIGHT,
+        () -> "Copy Feign URL"
+    );
+
+    return marker;
+  }
+
+  @Override
+  public @Nullable @GutterName String getName() {
+    return "Copy Feign URL";
+  }
 }

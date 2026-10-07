@@ -96,21 +96,15 @@
                       implementation="com.waaagh.provider.tabIcon.RestControllerIconProvider"/>
 
         <applicationConfigurable implementation="com.waaagh.user.UserPluginConfigurableUI"/>
-        <projectManagerListener implementation="com.waaagh.listener.app.CacheCleanListener"/>
-        <psiTreeChangeListener implementation="com.waaagh.listener.project.PsiClassGitChangeListener"/>
+        <!-- PSI change listener: correct EP name is `psi.treeChangeListener` (com.intellij.psi.treeChangeListener). -->
+        <psi.treeChangeListener implementation="com.waaagh.listener.project.PsiClassGitChangeListener"/>
 
     </extensions>
 
-    <application-components>
-        <component>
-            <implementation-class>com.waaagh.listener.app.WaaaghPluginInitializer</implementation-class>
-        </component>
-    </application-components>
-
-    <project-components>
-        <component>
-            <implementation-class>com.waaagh.listener.project.WaaaghProjectComponent</implementation-class>
-        </component>
-    </project-components>
+    <!-- Project lifecycle: ProjectManagerListener is a message bus topic, not an extension point. -->
+    <applicationListeners>
+        <listener class="com.waaagh.listener.app.CacheCleanListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
 
 </idea-plugin>

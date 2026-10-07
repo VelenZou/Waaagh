@@ -39,7 +39,7 @@ public class ControllerClassScanUtils {
   }
 
   /**
-   * 全量扫描工程中的controllerinfos
+   * 全量扫描工程中的 controllerinfos
    */
   public static List<HttpMappingInfo> scanControllerPaths(Project project) {
     // 检查是否在 Dumb 模式下，以避免在项目构建期间执行代码
