@@ -42,11 +42,11 @@
 
 ```bash
 cd waaagh
-export JAVA_HOME=/path/to/jdk-11
+export JAVA_HOME=/path/to/jdk-25
 ./gradlew buildPlugin
 ```
 
-产物：`waaagh/build/distributions/waaagh-1.0.0.zip`
+产物：`waaagh/build/distributions/waaagh-1.1.0.zip`
 
 启动沙盒 IDE：
 
@@ -58,9 +58,11 @@ export JAVA_HOME=/path/to/jdk-11
 
 `waaagh/sample/debug_openfeign/` 是一个 Maven 多模块示例工程。演示用的匹配对：**`UserClient` → `UserServerController`**（`/hello/world/user/...`）。
 
+旁边是各种形状用例：**`UserDeleteClient`**（第二个调用方）、**`UserClientSamePaths`**（同路径多方法 + 无目标客户端）、**`UserClientConstantPath`**（路径写在常量里）↔ **`DuplicateUserServerController`** / **`UserDeleteAliasController`**（故意重复的映射）；继承场景 **`InheritanceApi` ← `InheritanceFeignClient`** ↔ **`InheritanceServerController`**；服务端缺前缀反例 **`OrderClientMissingContextPath`**。完整清单见 `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`。
+
 HTTP 方法匹配有独立的验证对：**`MethodMatchClient` ↔ `MethodMatchServerController`**（`/hello/world/method/...`），应该匹配 / 不应匹配的对照表见 `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`。
 
-按子包路径前缀（`PathMatchConfigurer#addPathPrefix`）也有独立用例：**`V2UserClient` / `V3OrderClient` / `V2BetaClient`**（`/hello/world/v2/...`、`/hello/world/v3/...`），另有一个故意缺前缀的反例客户端；对照表见 `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`。
+按子包路径前缀（`PathMatchConfigurer#addPathPrefix`）也有独立用例：**`V2UserClient` / `V3OrderClient` / `V2BetaClient`**（`/hello/world/v2/...`、`/hello/world/v3/...`），另有一个故意缺前缀的反例客户端 `V2UserClientMissingPrefix`；对照表见 `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`。
 
 ## 参与贡献
 

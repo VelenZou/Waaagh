@@ -1,6 +1,6 @@
 # AGENTS.md
 
-## Cursor Cloud specific instructions
+## Development environment
 
 This repo is an **IntelliJ IDEA plugin** called *Waaagh* (Feign ↔ Controller navigator),
 living in `waaagh/` (Gradle, Kotlin DSL). `waaagh/sample/debug_openfeign/` is a **Maven** Spring Cloud
@@ -31,9 +31,10 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 - Maven tool window → **Reload All Maven Projects**. The bundled Maven in 2026.2.3 handles the
   sample's Maven 3.9.7 wrapper fine — the old IDEA 2021.2 import failure no longer applies.
 - If newly added sample files don't show up, right-click the sample root → **Reload from Disk**.
-- The plugin's scan results are cached per project; after editing config classes or adding
-  Controllers, close/reopen the project to refresh the full scan (single-method URL copy is
-  recomputed immediately).
+- The plugin's scan results are cached per project; the cache is invalidated automatically when
+  Java / Spring config files are saved or changed on disk (e.g. by Cursor) and synchronized by
+  the IDE — the next navigation or gutter request triggers a rescan. Single-method URL copy is
+  always recomputed on the spot.
 
 ### Build / lint / run (from `waaagh/`)
 - Build: `./gradlew buildPlugin` → `waaagh/build/distributions/waaagh-<version>.zip`
@@ -45,15 +46,26 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 - Workflow `.github/workflows/build-plugin.yml` builds on PR / push to master.
 - Tag `v*` creates a GitHub Release with the zip; optional Marketplace publish via `PUBLISH_TOKEN`.
 
+### Verified compatibility
+- `since-build` is **203 (2020.3)**. `./gradlew verifyPlugin` checks the plugin against
+  **2020.3.4 / 2021.1.3 / 2021.2.4** — all report **Compatible** (verifier 1.410).
+- `current()` (2026.2.3) is commented out in the verification matrix: verifying it requires
+  JetBrains Marketplace access to resolve transitive plugin dependencies. 2026.2.3 is covered by
+  building and running the plugin in the sandbox (`runIde`) instead.
+
 ### Sample fixtures
 - Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
-- Inheritance: **`TransportServiceApi`** (base interface, no `@FeignClient`) ← **`TransportService`**
-  (empty `@FeignClient`) ↔ **`TransportServerController`** (`/hello/world/transport/...`).
+- Multi-target & shape cases: **`UserDeleteClient`** (second caller), **`UserClientSamePaths`**
+  (same-path aliases, client-only negative), **`UserClientConstantPath`** (paths via
+  `UserApiPaths` constants) ↔ **`DuplicateUserServerController`** / **`UserDeleteAliasController`**
+  (same mappings on purpose); server-side negative **`OrderClientMissingContextPath`**.
+- Inheritance: **`InheritanceApi`** (base interface, no `@FeignClient`) ← **`InheritanceFeignClient`**
+  (empty `@FeignClient`) ↔ **`InheritanceServerController`** (`/hello/world/inheritance/...`).
 - HTTP method matching: **`MethodMatchClient`** ↔ **`MethodMatchServerController`**
   (`/hello/world/method/...`); expected match / no-match matrix in
   `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
 - Package path prefix: **`WaaaghPathPrefixConfig`** registers `/v2` (lambda over
   `controller.v2*`, startsWith) and `/v3` (`HandlerTypePredicate.forBasePackage`);
   fixtures **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** ↔ **`V2UserApiController` /
-  `V3OrderApiController` / `V2BetaApiController`**, negative case **`V2UserNoPrefixClient`**;
+  `V3OrderApiController` / `V2BetaApiController`**, negative case **`V2UserClientMissingPrefix`**;
   expected matrix in `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.

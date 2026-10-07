@@ -4,45 +4,94 @@
     <name>WAAAGH</name>
     <vendor email="velenzou@users.noreply.github.com" url="https://github.com/velenzou/waaagh">velenzou</vendor>
 
-    <description>
-        <![CDATA[
-            <b>English</b>
+    <description><![CDATA[WAAAGH — Feign / Controller navigation for Spring Cloud projects.
             <br><br>
-            <b>WAAAGH</b> is a collection of IntelliJ IDEA plugins. Popular tools may later be spun out
-            as standalone plugins.
+            WAAAGH is an IntelliJ IDEA plugin collection; popular tools may later be split into
+            standalone plugins. This tool connects Spring Cloud <code>@FeignClient</code> interfaces
+            with the <code>@RestController</code> / <code>@Controller</code> endpoints they map to,
+            right inside the editor.
             <br><br>
-            <b>Current tool: Feign &lt;-&gt; Controller navigation</b>
+            <b>Features</b>
             <ul>
-              <li><b>Go to Implementation</b> (Ctrl+Alt+B) from Feign methods to matching Controllers</li>
-              <li><b>Go to Declaration</b> (Ctrl+B / Ctrl+Click) between Feign and Controller</li>
-              <li><b>Call Hierarchy</b> integration — Feign appears as callers of Controllers, and Controllers appear as callees of Feign</li>
+              <li><b>Bidirectional navigation</b> — matching methods show a gutter icon; click it to jump
+                  between a Feign method and its Controller endpoint.</li>
+              <li><b>Go to Declaration / Implementation</b> — <code>Ctrl+B</code> / <code>Ctrl+Click</code>
+                  and <code>Ctrl+Alt+B</code> work between Feign clients and Controllers.</li>
+              <li><b>Call Hierarchy</b> — on a Feign method, Callees list the Controller methods it maps to;
+                  on a Controller method, Callers list the Feign methods that reach it.</li>
+              <li><b>Copy URL</b> — click the clipboard gutter icon to copy the complete request URL
+                  (context path + servlet path + package prefix + class path + method path).</li>
+              <li><b>Accurate matching</b> — matched by full path + HTTP method; understands endpoints
+                  inherited from base API interfaces, duplicate mappings, many-to-many relations,
+                  and paths written as constants.</li>
             </ul>
-            Also supports <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>
-            and package-based path prefixes (<code>PathMatchConfigurer#addPathPrefix</code>),
-            bilateral PSI cache, and full-URL clipboard copy.
-            <br><br>
+            <b>How to use</b>
+            <ol>
+              <li>Open a project with Spring Cloud OpenFeign clients and Spring MVC Controllers.</li>
+              <li>Open a <code>@FeignClient</code> interface or a Controller class — matching methods
+                  get a gutter icon; click it to jump to the other side.</li>
+              <li>Or put the caret on a method and press <code>Ctrl+B</code> (Go to Declaration)
+                  or <code>Ctrl+Alt+B</code> (Go to Implementation).</li>
+              <li>Or press <code>Ctrl+Alt+H</code> (Call Hierarchy) to explore the mapping in both directions.</li>
+              <li>Editor-tab icons for Feign / Controller classes can be toggled in
+                  <b>Settings → search "WAAAGH"</b>.</li>
+            </ol>
             <br><br>
             <b>中文</b>
             <br><br>
-            <b>WAAAGH!!!</b> —— 一个 IntelliJ IDEA 插件集合。集合里受欢迎的子工具，
-            未来可能会被拆分成独立插件。
+            <b>WAAAGH —— Spring Cloud 项目的 Feign ↔ Controller 跳转工具。</b>
             <br><br>
-            <b>当前工具：Feign ↔ Controller 跳转</b>
+            WAAAGH 是一个 IntelliJ IDEA 插件集合，受欢迎的工具未来可能会拆分成独立插件。
+            当前工具把 Spring Cloud 的 <code>@FeignClient</code> 接口与它们映射到的
+            <code>@RestController</code> / <code>@Controller</code> 端点连起来，直接在编辑器里跳转。
+            <br><br>
+            <b>功能</b>
             <ul>
-              <li><b>Go to Implementation</b>（Ctrl+Alt+B）：从 Feign 方法跳转到匹配的 Controller</li>
-              <li><b>Go to Declaration</b>（Ctrl+B / Ctrl+单击）：在 Feign 与 Controller 之间互相跳转</li>
-              <li><b>Call Hierarchy</b>：Feign 显示为 Controller 的调用方，Controller 显示为 Feign 的被调用方</li>
+              <li><b>双向跳转</b> —— 匹配的方法旁会出现侧边栏图标，点击即在 Feign 方法与 Controller 端点之间跳转。</li>
+              <li><b>Go to Declaration / Implementation</b> —— 在 Feign 与 Controller 之间使用
+                  <code>Ctrl+B</code> / <code>Ctrl+单击</code>、<code>Ctrl+Alt+B</code>。</li>
+              <li><b>Call Hierarchy</b> —— 在 Feign 方法上看 Callees，列出它映射到的 Controller 方法；
+                  在 Controller 方法上看 Callers，列出会调用到它的 Feign 方法。</li>
+              <li><b>复制 URL</b> —— 点击侧边栏的剪贴板图标，复制完整请求 URL
+                  （上下文路径 + servlet 路径 + 包前缀 + 类路径 + 方法路径）。</li>
+              <li><b>精确匹配</b> —— 按「完整路径 + HTTP 方法」匹配；支持从基础 API 接口继承的端点、
+                  重复映射、多对多关系，以及写在常量里的路径。</li>
             </ul>
-            支持解析 <code>server.servlet.context-path</code> / <code>spring.mvc.servlet.path</code>，
-            按子包注册的路径前缀（<code>PathMatchConfigurer#addPathPrefix</code>），
-            双边 PSI 缓存，以及一键复制完整 URL。
-            <br><br>
+            <b>怎么用</b>
+            <ol>
+              <li>打开包含 Spring Cloud OpenFeign 客户端与 Spring MVC Controller 的项目。</li>
+              <li>打开 <code>@FeignClient</code> 接口或 Controller 类 —— 匹配的方法旁会出现侧边栏图标，点击即跳到对端。</li>
+              <li>或者把光标放在方法上，按 <code>Ctrl+B</code>（Go to Declaration）/
+                  <code>Ctrl+Alt+B</code>（Go to Implementation）。</li>
+              <li>或者按 <code>Ctrl+Alt+H</code>（Call Hierarchy），双向查看映射关系。</li>
+              <li>Feign / Controller 类的编辑器标签图标可在 <b>Settings → 搜索 "WAAAGH"</b> 中开关。</li>
+            </ol>
+            <br>
             <a href="https://github.com/velenzou/waaagh">GitHub</a>
         ]]>
     </description>
 
     <change-notes>
         <![CDATA[
+            <b>1.1.0</b>
+            <ul>
+              <li><b>HTTP method matching</b>: endpoints now match on full path <b>and</b> HTTP method.
+                  A mapping without an explicit method matches any method; multi-value method
+                  attributes are compared as a set intersection.</li>
+              <li><b>Package-based path prefixes</b>: prefixes registered via
+                  <code>PathMatchConfigurer#addPathPrefix</code> (package / annotation lambdas,
+                  <code>HandlerTypePredicate</code> and their combinations) are applied to matching
+                  and to copied URLs.</li>
+              <li><b>Smarter path resolution</b>: annotation paths built from constants, static fields,
+                  local variables and <code>@Value("${...}")</code> are resolved, together with
+                  <code>server.servlet.context-path</code> and <code>spring.mvc.servlet.path</code>.</li>
+              <li><b>IntelliJ IDEA 2026.2 support</b>: built and tested against IntelliJ IDEA 2026.2.3;
+                  Call Hierarchy keeps working on both older and newer IDEs.</li>
+              <li>More reliable Feign / Controller discovery through annotation indexing.</li>
+              <li><b>Automatic cache refresh</b>: after files are saved or changed by an external editor
+                  (and synchronized by the IDE), mappings are rescanned automatically — no need to
+                  close and reopen the project.</li>
+            </ul>
             <b>1.0.1</b>
             <ul>
               <li>Feign inheritance: endpoints declared on a base API interface (extended by an empty @FeignClient sub-interface) are now navigable and appear in Call Hierarchy.</li>
@@ -55,7 +104,7 @@
         ]]>
     </change-notes>
 
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <idea-version since-build="203.0"/>
 
     <depends>com.intellij.modules.platform</depends>

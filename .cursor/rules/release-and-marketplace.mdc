@@ -15,9 +15,16 @@ touching the release pipeline. (Build/run conventions live in `AGENTS.md`.)
 - Do NOT change the plugin `<id>` (`com.waaagh`) — it identifies the Marketplace plugin (id `33496`).
 
 ## `<description>` (Marketplace "Overview")
-- MUST start with Latin characters and be at least 40 characters → put the **English block first**, then the Chinese block.
-- Keep it **bilingual** with a clear split: a `<b>English</b>` section and a `<b>中文</b>` section,
-  separated by a blank line (`<br><br>`). Do NOT use `<hr>` as the divider — the Marketplace renderer strips it.
+- The check runs on the **rendered** description text (HTML tags stripped, entities decoded):
+  its first 40 characters must match `^[\w\s\p{Punct}\u2013\u2014]{40,}` — i.e. ASCII
+  letters/digits/whitespace/punctuation (or `–` `—`). Non-ASCII symbols such as `↔` (even written
+  as `&harr;`), CJK characters or typographic quotes break the check if they appear within those
+  first 40 rendered characters — keep them out of the opening line / first sentence.
+- Keep it **bilingual** with a clear split; mark the Chinese block with `<b>中文</b>`, separated by
+  `<br><br>`. Do NOT use `<hr>` as the divider — the Marketplace renderer strips it.
+- `docs/marketplace-description.html` is the paste-ready copy for the Marketplace web editor
+  (the page description is maintained separately from the uploaded zip). Update it together with
+  `plugin.xml` whenever the description changes.
 - Positioning: an IntelliJ IDEA **plugin collection**; popular tools may later be spun out as
   standalone plugins. Keep the description focused on features and usage — do not add statements
   about how the code is written or maintained.
