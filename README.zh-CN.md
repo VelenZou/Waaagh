@@ -11,15 +11,6 @@
 
 **WAAAGH!!!** 是一个 IntelliJ IDEA 插件集合。集合里受欢迎的工具，未来可能会被拆分成独立发布的插件。
 
-## 这个项目有什么不一样
-
-本项目的每一行内容 —— 生产代码**和**测试 —— 都由大语言模型端到端生成。**没有人工编写代码，也没有人工 code review**。人类只做两件事：
-
-- 把想法丢给模型，以及
-- 对结果做最终验收，凭直觉判断这版行不行。
-
-整个循环就是这样 —— 追求的就是那种 **「感觉可以就可以的那种感觉」**。这正是战锤兽人造东西的方式：抓起手边任何零件，胡乱拼装到一起，吼一嗓子 **WAAAGH!!!**，然后它就莫名其妙地跑起来了。插件的名字也由此而来。
-
 ## 集合内容
 
 目前集合里有一个工具。
@@ -64,6 +55,10 @@ export JAVA_HOME=/path/to/jdk-11
 ## 示例工程
 
 `waaagh/sample/debug_openfeign/` 是一个 Maven 多模块示例工程。演示用的匹配对：**`UserClient` → `UserServerController`**（`/hello/world/user/...`）。
+
+## 参与贡献
+
+欢迎提交 bug 反馈、功能建议和 PR —— 请[提 issue](https://github.com/velenzou/waaagh/issues) 或直接发起 Pull Request。
 
 ## 许可证
 
