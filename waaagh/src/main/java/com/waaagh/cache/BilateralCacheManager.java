@@ -182,7 +182,7 @@ public class BilateralCacheManager {
     // 下面防空NPE
     if (MapUtils.isEmpty(qualifier2Info)) {
       qualifier2Info = new HashMap<>();
-      PROJECT_FEIGN_CACHE_MAP.put(basePath, qualifier2Info);
+      PROJECT_CONTROLLER_CACHE_MAP.put(basePath, qualifier2Info);
     }
     String qualifier = buildKey(controllerMethod);
     if (Objects.isNull(qualifier2Info.get(qualifier))) {
