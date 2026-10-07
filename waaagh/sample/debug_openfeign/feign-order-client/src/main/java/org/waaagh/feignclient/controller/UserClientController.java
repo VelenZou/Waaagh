@@ -8,6 +8,12 @@ import org.waaagh.cloudfeignapi.Result;
 import org.waaagh.cloudfeignapi.User;
 import org.waaagh.feignclient.feign.client.UserClient;
 
+/**
+ * 消费者 Controller（feign-order-client 模块自身暴露的接口），完整路径 /consumer/feign/user/get/{id}。
+ * <p>
+ * ❌ 项目中没有 Feign 客户端声明该路径，不参与 Feign ↔ Controller 匹配；
+ * 这里仅演示“Controller 调用 Feign 客户端”（见 userClient.getUserById）。
+ */
 //curl http://localhost:9000/consumer/feign/user/get/1
 @RestController
 public class UserClientController {

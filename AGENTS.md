@@ -44,3 +44,6 @@ no gutter icons/navigation targets appear.
 - Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
 - Inheritance: **`TransportServiceApi`** (base interface, no `@FeignClient`) ← **`TransportService`**
   (empty `@FeignClient`) ↔ **`TransportServerController`** (`/hello/world/transport/...`).
+- HTTP method matching: **`MethodMatchClient`** ↔ **`MethodMatchServerController`**
+  (`/hello/world/method/...`); expected match / no-match matrix in
+  `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
