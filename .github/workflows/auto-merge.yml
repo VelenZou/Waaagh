@@ -1,11 +1,17 @@
 name: Auto-merge PRs
 
 # Fully hands-off, no repository settings required (no "Allow auto-merge", no branch
-# protection): when the "Build Plugin" CI succeeds for a trusted, non-draft PR, this
-# squash-merges it into master/main and deletes the head branch, using GITHUB_TOKEN.
+# protection): when the "Build Plugin" CI succeeds for the repository owner's own,
+# non-draft PR, this squash-merges it into master/main and deletes the head branch,
+# using GITHUB_TOKEN.
 #
-# Safety: only merges PRs authored by OWNER / MEMBER / COLLABORATOR (fork/outside PRs
-# are skipped), only after CI passed, and only non-draft PRs targeting master/main.
+# Safety:
+# - only PRs whose branch lives in this repository are considered (fork PRs never
+#   enter this workflow at all);
+# - only PRs authored by the repository owner are merged - PRs by anyone else stay
+#   open for manual review;
+# - the PR is matched by the exact head commit that CI verified (not by branch name);
+# - only non-draft PRs targeting master/main.
 #
 # Note: `workflow_run` workflows only run from the copy on the default branch, so this
 # takes effect once merged to master; new CI runs then trigger it automatically.
@@ -24,30 +30,36 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     steps:
-      - name: Squash-merge PRs whose CI passed
+      - name: Squash-merge the owner's PRs whose CI passed
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          echo "Build Plugin succeeded on branch: $HEAD_BRANCH"
-          prs=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open --json number --jq '.[].number')
+          owner="${REPO%%/*}"
+          echo "Build Plugin succeeded for ${REPO} commit: $HEAD_SHA"
+          # Locate the PR by the exact commit CI verified. Matching by branch name would
+          # let a same-named branch from another contributor select the wrong PR.
+          prs=$(gh api "repos/$REPO/commits/$HEAD_SHA/pulls" --jq '.[].number' || true)
           if [ -z "$prs" ]; then
-            echo "No open PR for branch $HEAD_BRANCH; nothing to merge."
+            echo "No pull request found for commit $HEAD_SHA; nothing to merge."
             exit 0
           fi
           for pr in $prs; do
             info=$(gh api "repos/$REPO/pulls/$pr")
             draft=$(echo "$info" | jq -r '.draft')
-            assoc=$(echo "$info" | jq -r '.author_association')
+            author=$(echo "$info" | jq -r '.user.login')
             base=$(echo "$info" | jq -r '.base.ref')
-            echo "PR #$pr — draft=$draft author_association=$assoc base=$base"
+            sha=$(echo "$info" | jq -r '.head.sha')
+            echo "PR #$pr - draft=$draft author=$author base=$base head=$sha"
             if [ "$draft" != "false" ]; then echo "skip: draft PR"; continue; fi
             case "$base" in master|main) ;; *) echo "skip: base $base"; continue ;; esac
-            case "$assoc" in OWNER|MEMBER|COLLABORATOR) ;; *) echo "skip: untrusted author ($assoc)"; continue ;; esac
+            if [ "$author" != "$owner" ]; then echo "skip: author is not the repository owner"; continue; fi
+            if [ "$sha" != "$HEAD_SHA" ]; then echo "skip: PR head moved since CI ran"; continue; fi
             echo "Merging PR #$pr ..."
             gh pr merge "$pr" --repo "$REPO" --squash --delete-branch \
               || echo "::warning::Could not merge PR #$pr (a branch protection rule may be blocking it)."
