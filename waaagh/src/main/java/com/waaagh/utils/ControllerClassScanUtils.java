@@ -9,22 +9,24 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiPackage;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.psi.util.CachedValuesManager;
 import com.waaagh.cache.BilateralCacheManager;
-import com.waaagh.cache.InitialPsiClassCacheManager;
 import com.waaagh.entity.HttpMappingInfo;
+import com.waaagh.enums.SpringBootClassAnnotation;
 import com.waaagh.properties.ConfigReader;
 import com.waaagh.properties.ServerParser;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import org.apache.commons.collections.CollectionUtils;
+import java.util.Set;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,8 +34,6 @@ public class ControllerClassScanUtils {
 
   private static final String SPRINGBOOT_SERVER_PATH = "server.servlet.context-path";
   private static final String SPRINGMVC_PATH = "spring.mvc.servlet.path";
-  // 初始化PsiClass缓存管理器
-  private static final InitialPsiClassCacheManager initialPsiClassCacheManager = InitialPsiClassCacheManager.getInstance();
 
   private ControllerClassScanUtils() {
   }
@@ -47,23 +47,6 @@ public class ControllerClassScanUtils {
       return Collections.emptyList();
     }
 
-    PsiManager psiManager = PsiManager.getInstance(project);
-
-    PsiPackage rootPackage = JavaPsiFacade.getInstance(psiManager.getProject()).findPackage("");
-
-    // 获取项目中的所有源文件
-    List<HttpMappingInfo> httpMappingInfos = new ArrayList<>();
-
-    // 获取项目ID
-    String projectId = project.getBasePath();
-
-    List<PsiClass> javaFiles = initialPsiClassCacheManager.queryCurProjectPsiClassesCache(
-        projectId);
-
-    if (CollectionUtils.isEmpty(javaFiles)) {
-      javaFiles = ProjectUtils.scanProjectCls(rootPackage, project);
-      initialPsiClassCacheManager.initCurProjectPsiClassCache(projectId, javaFiles);
-    }
     // controller接口缓存查询
     Map<String, HttpMappingInfo> controllerCaches = BilateralCacheManager.queryControllerCaches(
         project);
@@ -71,9 +54,11 @@ public class ControllerClassScanUtils {
     if (MapUtils.isNotEmpty(controllerCaches)) {
       return new ArrayList<>(controllerCaches.values());
     }
-    // 创建全部的controller信息
-    for (PsiClass psiClass : javaFiles) {
-      // 校验 psiClass 的有效性，毕竟有可能psiClass是从缓存中获取的，但是被RestClassIconProvider修改了
+
+    // 通过注解索引查找 Controller 类，避免全量递归遍历项目中的所有包
+    List<HttpMappingInfo> httpMappingInfos = new ArrayList<>();
+    for (PsiClass psiClass : findControllerClasses(project)) {
+      // 校验 psiClass 的有效性，毕竟有可能psiClass是从索引中获取的，但已经被修改了
       if (null == psiClass || !psiClass.isValid()) {
         continue;
       }
@@ -86,20 +71,41 @@ public class ControllerClassScanUtils {
   }
 
   /**
+   * 基于注解索引查找项目中的 Controller 类（@Controller / @RestController）
+   */
+  private static List<PsiClass> findControllerClasses(Project project) {
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+    JavaPsiFacade facade = JavaPsiFacade.getInstance(project);
+
+    Set<PsiClass> controllerClasses = new LinkedHashSet<>();
+    for (SpringBootClassAnnotation annotation : new SpringBootClassAnnotation[]{
+        SpringBootClassAnnotation.CONTROLLER, SpringBootClassAnnotation.RESTCONTROLLER}) {
+      PsiClass annotationClass = facade.findClass(annotation.getQualifiedName(), scope);
+      if (annotationClass == null) {
+        continue;
+      }
+      for (PsiClass psiClass : AnnotatedElementsSearch.searchPsiClasses(annotationClass, scope)
+          .findAll()) {
+        // 排除三方依赖，只保留项目源码中的类
+        if (psiClass.isValid() && ProjectUtils.isBizElement(psiClass)) {
+          controllerClasses.add(psiClass);
+        }
+      }
+    }
+    return new ArrayList<>(controllerClasses);
+  }
+
+  /**
    * 创建出当前psiclass（controller）内的所有HttpMappingInfo
    */
   public static List<HttpMappingInfo> controllersOfPsiClass(PsiClass psiClass, Project project) {
     List<HttpMappingInfo> rs = new ArrayList<>();
     if (AnnotationParserUtils.isControllerClass(psiClass)) {
-      StringBuilder parentPath = new StringBuilder();
-      String serverPath = extractSpringProperties(psiClass, project, SPRINGBOOT_SERVER_PATH);
-      String mvcPath = extractSpringProperties(psiClass, project, SPRINGMVC_PATH);
-      String controllerPath = controllerPsiClassPath(psiClass);
-      parentPath.append(serverPath).append(mvcPath).append(controllerPath);
+      String parentPath = buildControllerParentPath(psiClass, project);
       // 解析类中的方法，提取接口路径和Swagger注解信息
       PsiMethod[] methods = psiClass.getMethods();
       for (PsiMethod method : methods) {
-        HttpMappingInfo httpMappingInfo = HttpMappingInfo.of(parentPath.toString(), method);
+        HttpMappingInfo httpMappingInfo = HttpMappingInfo.of(parentPath, method);
         if (httpMappingInfo != null) {
           // 设置psi方法信息
           httpMappingInfo.setPsiMethod(method);
@@ -117,53 +123,58 @@ public class ControllerClassScanUtils {
       PsiMethod psiMethod) {
     HttpMappingInfo httpMappingInfo = null;
     if (AnnotationParserUtils.isControllerClass(psiClass)) {
-      StringBuilder parentPath = new StringBuilder();
-      String serverPath = extractSpringProperties(psiClass, project, SPRINGBOOT_SERVER_PATH);
-      String mvcPath = extractSpringProperties(psiClass, project, SPRINGMVC_PATH);
-      String controllerPath = controllerPsiClassPath(psiClass);
-      parentPath.append(serverPath).append(mvcPath).append(controllerPath);
-      // 提取接口路径和Swagger注解信息
-      httpMappingInfo = HttpMappingInfo.of(parentPath.toString(), psiMethod);
+      httpMappingInfo = HttpMappingInfo.of(buildControllerParentPath(psiClass, project), psiMethod);
       if (Objects.nonNull(httpMappingInfo)) {
         // 设置psi方法信息
         httpMappingInfo.setPsiMethod(psiMethod);
       }
-
     }
     return httpMappingInfo;
   }
 
   /**
-   * resolve： eg.server.servlet.context-path=/hello eg .spring.mvc.servlet.path=/world
-   *
-   * @param psiClass
-   * @param project
-   * @param configKey
-   * @return
+   * 拼接类级别的前缀路径：server.servlet.context-path + spring.mvc.servlet.path + 类上的 @RequestMapping 路径
    */
-  public static String extractSpringProperties(PsiClass psiClass, Project project,
-      String configKey) {
-    Optional<PsiDirectory> serviceModuleDirectory = ServerParser.getServiceModuleResourcesDirectory(
+  private static String buildControllerParentPath(PsiClass psiClass, Project project) {
+    StringBuilder parentPath = new StringBuilder();
+    Optional<PsiDirectory> resourcesDirectory = ServerParser.getServiceModuleResourcesDirectory(
         psiClass, project);
-    String propertyPath = null;
-
-    if (serviceModuleDirectory.isPresent()) {
-      // 读取 properties 文件
-      Properties properties = ConfigReader.readProperties(serviceModuleDirectory.get());
-      if (properties != null && properties.containsKey(configKey)) {
-        propertyPath = properties.getProperty(configKey);
-      }
-
-      // 如果在 properties 文件中未找到，继续在 yml 或 yaml 文件中查找
-      if (propertyPath == null) {
-        Map<String, Object> yml = ConfigReader.readYmlOrYaml(serviceModuleDirectory.get());
-        if (yml != null) {
-          propertyPath = extractValueFromYml(yml, configKey);
-        }
-      }
+    if (resourcesDirectory.isPresent()) {
+      parentPath.append(extractSpringProperties(resourcesDirectory.get(), SPRINGBOOT_SERVER_PATH));
+      parentPath.append(extractSpringProperties(resourcesDirectory.get(), SPRINGMVC_PATH));
     }
+    parentPath.append(controllerPsiClassPath(psiClass));
+    return parentPath.toString();
+  }
 
+  /**
+   * 按模块（resources 目录）缓存配置解析结果，避免每个 Controller 类都重新读取/解析一次配置文件。
+   * 缓存依赖 PSI 修改计数，配置文件变更后会自动失效重读。
+   */
+  private static String extractSpringProperties(PsiDirectory resourcesDirectory, String configKey) {
+    ModuleConfig moduleConfig = getModuleConfig(resourcesDirectory);
+    if (moduleConfig.properties.containsKey(configKey)) {
+      return moduleConfig.properties.getProperty(configKey);
+    }
+    String propertyPath = extractValueFromYml(moduleConfig.yml, configKey);
     return propertyPath == null ? "" : propertyPath;
+  }
+
+  private static ModuleConfig getModuleConfig(PsiDirectory resourcesDirectory) {
+    return CachedValuesManager.getProjectPsiDependentCache(resourcesDirectory,
+        directory -> new ModuleConfig(ConfigReader.readProperties(directory),
+            ConfigReader.readYmlOrYaml(directory)));
+  }
+
+  private static final class ModuleConfig {
+
+    private final Properties properties;
+    private final Map<String, Object> yml;
+
+    private ModuleConfig(Properties properties, Map<String, Object> yml) {
+      this.properties = properties;
+      this.yml = yml;
+    }
   }
 
   // 从 YAML Map 中提取目标值，支持嵌套键
