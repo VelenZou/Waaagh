@@ -47,3 +47,8 @@ no gutter icons/navigation targets appear.
 - HTTP method matching: **`MethodMatchClient`** ↔ **`MethodMatchServerController`**
   (`/hello/world/method/...`); expected match / no-match matrix in
   `waaagh/sample/debug_openfeign/METHOD_MATCHING.md`.
+- Package path prefix: **`WaaaghPathPrefixConfig`** registers `/v2` (lambda over
+  `controller.v2*`, startsWith) and `/v3` (`HandlerTypePredicate.forBasePackage`);
+  fixtures **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** ↔ **`V2UserApiController` /
+  `V3OrderApiController` / `V2BetaApiController`**, negative case **`V2UserNoPrefixClient`**;
+  expected matrix in `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.
