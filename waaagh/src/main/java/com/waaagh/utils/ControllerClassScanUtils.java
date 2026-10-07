@@ -135,7 +135,8 @@ public class ControllerClassScanUtils {
   }
 
   /**
-   * 拼接类级别的前缀路径：server.servlet.context-path + spring.mvc.servlet.path + 类上的 @RequestMapping 路径
+   * 拼接类级别的前缀路径：server.servlet.context-path + spring.mvc.servlet.path
+   * + 按子包注册的路径前缀（PathMatchConfigurer#addPathPrefix） + 类上的 @RequestMapping 路径
    */
   private static String buildControllerParentPath(PsiClass psiClass, Project project) {
     StringBuilder parentPath = new StringBuilder();
@@ -145,6 +146,7 @@ public class ControllerClassScanUtils {
       parentPath.append(extractSpringProperties(resourcesDirectory.get(), SPRINGBOOT_SERVER_PATH));
       parentPath.append(extractSpringProperties(resourcesDirectory.get(), SPRINGMVC_PATH));
     }
+    parentPath.append(PathPrefixResolver.resolveControllerPathPrefix(psiClass, project));
     parentPath.append(controllerPsiClassPath(psiClass));
     return parentPath.toString();
   }
@@ -153,7 +155,7 @@ public class ControllerClassScanUtils {
    * 按模块（resources 目录）缓存配置解析结果，避免每个 Controller 类都重新读取/解析一次配置文件。
    * 缓存依赖 PSI 修改计数，配置文件变更后会自动失效重读。
    */
-  private static String extractSpringProperties(PsiDirectory resourcesDirectory, String configKey) {
+  static String extractSpringProperties(PsiDirectory resourcesDirectory, String configKey) {
     ModuleConfig moduleConfig = getModuleConfig(resourcesDirectory);
     if (moduleConfig.properties.containsKey(configKey)) {
       return moduleConfig.properties.getProperty(configKey);
