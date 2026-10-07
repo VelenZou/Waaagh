@@ -33,7 +33,8 @@ public class WaaaghPathPrefixConfig implements WebMvcConfigurer {
                         && c.getPackageName().startsWith("org.waaagh.cloudfeignserver.controller.v2"));
 
         // 规则二：HandlerTypePredicate.forBasePackage → 前缀 /v3
+        String s = "org.waaagh.cloudfeignserver.controller.v3";
         configurer.addPathPrefix(V3_PREFIX,
-                HandlerTypePredicate.forBasePackage("org.waaagh.cloudfeignserver.controller.v3"));
+                HandlerTypePredicate.forBasePackage(s));
     }
 }
