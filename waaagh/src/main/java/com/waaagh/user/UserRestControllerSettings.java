@@ -7,13 +7,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @Author: liuyanoutsee@outlook.com
- * @Date: 2025/4/2 21:17
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: 用户配置存储在本地的Waaagh-Settings.xml
- */
 @Service(Service.Level.APP)
 @State(name = "ControllerPluginSettings", storages = @Storage("Waaagh-Settings.xml"))
 public final class UserRestControllerSettings implements PersistentStateComponent<UserRestControllerSettings.State> {

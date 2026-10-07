@@ -12,13 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @Author: liuyanoutsee@outlook.com
- * @Date: 2025/4/2 20:34
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: ApiController文件图标
- */
 public class RestControllerIconProvider extends IconProvider {
     /**
      * ApiController文件图标
@@ -30,7 +23,7 @@ public class RestControllerIconProvider extends IconProvider {
         if (null==element) {
             return null;
         }
-        //排除三方依赖扫描
+        // 排除三方依赖扫描
         if (!ProjectUtils.isBizElement(element)){
             return null;
         }
@@ -45,7 +38,7 @@ public class RestControllerIconProvider extends IconProvider {
             return null;
         }
 
-        //开启ApiController文件图标
+        // 开启ApiController文件图标
         if (!UserRestControllerSettings.getInstance().isIconEnabled()) {
             return null;
         }

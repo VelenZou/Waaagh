@@ -8,12 +8,6 @@ import com.intellij.psi.PsiManager;
 
 import java.util.Optional;
 
-/**
- * @Description:
- * @Author: lyflexi
- * @project: waaagh
- * @Date: 2024/11/3 15:01 
- */
 public class ServerParser {
 
     public static Optional<PsiDirectory> getServiceModuleResourcesDirectory(PsiClass psiClass, Project project) {

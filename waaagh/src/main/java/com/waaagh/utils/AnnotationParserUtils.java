@@ -23,13 +23,6 @@ import static com.waaagh.enums.SpringBootClassAnnotation.RESTCONTROLLER;
 import com.waaagh.entity.HttpMappingInfo;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @Author: hmly
- * @Date: 2025/3/12 19:44
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: 注解解析类
- */
 public class AnnotationParserUtils {
 
     /**

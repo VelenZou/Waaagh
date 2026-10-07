@@ -8,19 +8,19 @@ import com.waaagh.listener.project.PsiClassGitChangeListener;
 
 public class WaaaghPluginInitializer implements ApplicationComponent {
 
-    @Override
-    public void initComponent() {
-        // 注册监听器
-        ProjectManager.getInstance().addProjectManagerListener(new CacheCleanListener());
-    }
+  @Override
+  public void initComponent() {
+    // 注册监听器
+    ProjectManager.getInstance().addProjectManagerListener(new CacheCleanListener());
+  }
 
-    @Override
-    public void disposeComponent() {
-        // 清理资源
-    }
+  @Override
+  public void disposeComponent() {
+    // 清理资源
+  }
 
-    @Override
-    public String getComponentName() {
-        return "WaaaghPluginInitializer";
-    }
+  @Override
+  public String getComponentName() {
+    return "WaaaghPluginInitializer";
+  }
 }

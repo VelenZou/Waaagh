@@ -12,13 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @Author: liuyanoutsee@outlook.com
- * @Date: 2025/4/2 21:21
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description: 这是个idea设置页面。自定义控制controller文件图标和FeignClient文件图标的开启
- */
 public class UserPluginConfigurableUI implements Configurable {
 
     private JCheckBox feignIconEnabledCheckBox;

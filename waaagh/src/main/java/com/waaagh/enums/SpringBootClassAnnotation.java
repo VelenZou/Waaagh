@@ -1,36 +1,29 @@
 package com.waaagh.enums;
 
-/**
- * @Description:
- * @Author: lyflexi
- * @project: waaagh
- * @Date: 2024/10/18 14:53
- */
 public enum SpringBootClassAnnotation {
-    /**
-     * RequestMapping
-     */
-    CONTROLLER("org.springframework.stereotype.Controller",""),
-    /**
-     * GetMapping
-     */
-    RESTCONTROLLER("org.springframework.web.bind.annotation.RestController","");
+  /**
+   * RequestMapping
+   */
+  CONTROLLER("org.springframework.stereotype.Controller", ""),
 
-    private final String qualifiedName;
-    private final String desc;
+  /**
+   * GetMapping
+   */
+  RESTCONTROLLER("org.springframework.web.bind.annotation.RestController", "");
 
-    SpringBootClassAnnotation(String qualifiedName, String desc) {
-        this.qualifiedName = qualifiedName;
-        this.desc = desc;
-    }
+  private final String qualifiedName;
+  private final String desc;
 
+  SpringBootClassAnnotation(String qualifiedName, String desc) {
+    this.qualifiedName = qualifiedName;
+    this.desc = desc;
+  }
 
-    public String getQualifiedName() {
-        return qualifiedName;
-    }
+  public String getQualifiedName() {
+    return qualifiedName;
+  }
 
-
-    public String getDesc() {
-        return desc;
-    }
+  public String getDesc() {
+    return desc;
+  }
 }

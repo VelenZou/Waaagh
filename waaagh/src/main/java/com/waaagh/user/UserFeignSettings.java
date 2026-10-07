@@ -7,13 +7,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @Author: liuyanoutsee@outlook.com
- * @Date: 2025/4/2 21:17
- * @Project: waaagh
- * @Version: 1.0.0
- * @Description:
- */
 @Service(Service.Level.APP)
 @State(name = "FeignPluginSettings", storages = @Storage("Waaagh-Settings.xml"))
 public final class UserFeignSettings implements PersistentStateComponent<UserFeignSettings.State> {

@@ -1,20 +1,18 @@
 package com.waaagh.entity;
 
-import com.intellij.psi.*;
-import com.waaagh.enums.SpringBootMethodAnnotation;
-import com.waaagh.utils.AnnotationParserUtils;
-
-import java.io.Serializable;
-
 import static com.waaagh.enums.SpringBootMethodAnnotation.REQUEST_MAPPING;
 
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiAnnotationMemberValue;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReferenceExpression;
+import com.waaagh.enums.SpringBootMethodAnnotation;
+import com.waaagh.utils.AnnotationParserUtils;
+import java.io.Serializable;
 
-/**
- * @Description: 方法级别的HttpMappingInfo
- * @Author: lyflexi
- * @project: waaagh
- * @Date: 2024/10/18 14:51
- */
+
 public class HttpMappingInfo implements Serializable {
     /**
      * full url path
@@ -108,9 +106,8 @@ public class HttpMappingInfo implements Serializable {
         if (this$method == null ? other$method != null : !this$method.equals(other$method)) return false;
         final Object this$requestMethod = this.getRequestMethod();
         final Object other$requestMethod = other.getRequestMethod();
-        if (this$requestMethod == null ? other$requestMethod != null : !this$requestMethod.equals(other$requestMethod))
-            return false;
-        return true;
+      return this$requestMethod == null ? other$requestMethod == null
+          : this$requestMethod.equals(other$requestMethod);
     }
 
     protected boolean canEqual(final Object other) {

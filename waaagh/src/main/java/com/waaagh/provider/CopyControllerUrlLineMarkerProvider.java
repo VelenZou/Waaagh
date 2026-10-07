@@ -1,8 +1,11 @@
 package com.waaagh.provider;
 
-import com.intellij.codeInsight.daemon.*;
+import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
+import com.intellij.codeInsight.daemon.GutterName;
+import com.intellij.codeInsight.daemon.LineMarkerInfo;
+import com.intellij.codeInsight.daemon.LineMarkerProviderDescriptor;
 import com.intellij.notification.NotificationGroupManager;
-
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.project.DumbService;
@@ -13,17 +16,13 @@ import com.intellij.psi.PsiMethod;
 import com.waaagh.cache.BilateralCacheManager;
 import com.waaagh.constant.RestIcons;
 import com.waaagh.entity.HttpMappingInfo;
-import com.waaagh.recover.SmartPsiElementRecover;
 import com.waaagh.utils.AnnotationParserUtils;
 import com.waaagh.utils.ControllerClassScanUtils;
 import com.waaagh.utils.ProjectUtils;
+import java.awt.datatransfer.StringSelection;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.datatransfer.StringSelection;
-import java.util.*;
-
-import com.intellij.notification.NotificationType;
 import org.jetbrains.annotations.Nullable;
 
 /**
