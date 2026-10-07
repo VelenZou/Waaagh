@@ -4,6 +4,7 @@ import static com.waaagh.enums.SpringBootMethodAnnotation.REQUEST_MAPPING;
 
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
+import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
@@ -11,6 +12,11 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.waaagh.enums.SpringBootMethodAnnotation;
 import com.waaagh.utils.AnnotationParserUtils;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class HttpMappingInfo implements Serializable {
@@ -23,9 +29,10 @@ public class HttpMappingInfo implements Serializable {
      */
     private PsiMethod psiMethod;
     /**
-     * request method
+     * HTTP 请求方法集合（GET/POST/PUT/DELETE/PATCH/...）。
+     * 空集合表示注解未指定方法：按 Spring 语义匹配所有请求方法（通配）。
      */
-    private String requestMethod;
+    private Set<String> requestMethods = Collections.emptySet();
     /**
      * swagger info
      */
@@ -61,8 +68,8 @@ public class HttpMappingInfo implements Serializable {
         return this.psiMethod;
     }
 
-    public String getRequestMethod() {
-        return this.requestMethod;
+    public Set<String> getRequestMethods() {
+        return this.requestMethods;
     }
 
     public void setPath(String path) {
@@ -81,8 +88,22 @@ public class HttpMappingInfo implements Serializable {
         this.psiMethod = psiMethod;
     }
 
-    public void setRequestMethod(String requestMethod) {
-        this.requestMethod = requestMethod;
+    public void setRequestMethods(Set<String> requestMethods) {
+        this.requestMethods = requestMethods;
+    }
+
+    /**
+     * 判断两个映射的 HTTP 请求方法是否兼容：
+     * 任一方未指定方法（空集合）视为通配；否则要求集合存在交集。
+     */
+    public boolean isRequestMethodCompatibleWith(HttpMappingInfo other) {
+        if (other == null) {
+            return false;
+        }
+        if (this.requestMethods.isEmpty() || other.requestMethods.isEmpty()) {
+            return true;
+        }
+        return !Collections.disjoint(this.requestMethods, other.requestMethods);
     }
 
     public boolean equals(final Object o) {
@@ -104,10 +125,10 @@ public class HttpMappingInfo implements Serializable {
         final Object this$method = this.getPsiMethod();
         final Object other$method = other.getPsiMethod();
         if (this$method == null ? other$method != null : !this$method.equals(other$method)) return false;
-        final Object this$requestMethod = this.getRequestMethod();
-        final Object other$requestMethod = other.getRequestMethod();
-      return this$requestMethod == null ? other$requestMethod == null
-          : this$requestMethod.equals(other$requestMethod);
+        final Object this$requestMethods = this.getRequestMethods();
+        final Object other$requestMethods = other.getRequestMethods();
+      return this$requestMethods == null ? other$requestMethods == null
+          : this$requestMethods.equals(other$requestMethods);
     }
 
     protected boolean canEqual(final Object other) {
@@ -125,13 +146,13 @@ public class HttpMappingInfo implements Serializable {
         result = result * PRIME + ($swaggerNotes == null ? 43 : $swaggerNotes.hashCode());
         final Object $method = this.getPsiMethod();
         result = result * PRIME + ($method == null ? 43 : $method.hashCode());
-        final Object $requestMethod = this.getRequestMethod();
-        result = result * PRIME + ($requestMethod == null ? 43 : $requestMethod.hashCode());
+        final Object $requestMethods = this.getRequestMethods();
+        result = result * PRIME + ($requestMethods == null ? 43 : $requestMethods.hashCode());
         return result;
     }
 
     public String toString() {
-        return "ControllerInfo(path=" + this.getPath() + ", swaggerInfo=" + this.getSwaggerInfo() + ", swaggerNotes=" + this.getSwaggerNotes() + ", method=" + this.getPsiMethod() + ", requestMethod=" + this.getRequestMethod() + ")";
+        return "ControllerInfo(path=" + this.getPath() + ", swaggerInfo=" + this.getSwaggerInfo() + ", swaggerNotes=" + this.getSwaggerNotes() + ", method=" + this.getPsiMethod() + ", requestMethods=" + this.getRequestMethods() + ")";
     }
     /**
      * 根据方法提取完整的接口信息
@@ -148,26 +169,59 @@ public class HttpMappingInfo implements Serializable {
             String annotationName = annotation.getQualifiedName();
             // 处理 @RequestMapping 注解
             if (annotationName != null && annotationName.equals(REQUEST_MAPPING.getQualifiedName())) {
-                httpMappingInfo.setRequestMethod("REQUEST");
-                // 提取 method 属性值
-                PsiAnnotationMemberValue methodValue = annotation.findAttributeValue("method");
-                if (methodValue instanceof PsiReferenceExpression) {
-                    PsiElement resolvedElement = ((PsiReferenceExpression) methodValue).resolve();
-                    if (resolvedElement instanceof PsiField) {
-                        String methodName = ((PsiField) resolvedElement).getName();
-                        // 使用字典映射设置请求方法
-                        httpMappingInfo.setRequestMethod(AnnotationParserUtils.getRequestMethodFromMethodName(methodName));
-                    }
-                }
+                // 未指定 method 属性时集合为空：Spring 语义为匹配所有请求方法
+                httpMappingInfo.setRequestMethods(
+                    extractRequestMethods(annotation.findAttributeValue("method")));
                 return AnnotationParserUtils.getValue(annotation, httpMappingInfo, method);
             } else if (SpringBootMethodAnnotation.getByQualifiedName(annotationName) != null) {
-                // 处理其他常用注解
+                // 处理其他常用注解（@GetMapping/@PostMapping/... 方法唯一）
                 SpringBootMethodAnnotation requestMethod = SpringBootMethodAnnotation.getByQualifiedName(annotationName);
-                httpMappingInfo.setRequestMethod(requestMethod != null ? requestMethod.methodName() : "REQUEST");
+                if (requestMethod != null && requestMethod.methodName() != null) {
+                    httpMappingInfo.setRequestMethods(Collections.singleton(requestMethod.methodName()));
+                }
                 return AnnotationParserUtils.getValue(annotation, httpMappingInfo, method);
             }
 
         }
         return null;
+    }
+
+    /**
+     * 提取 @RequestMapping 的 method 属性，支持单值、数组及常量/枚举引用：
+     * {@code method = RequestMethod.GET}、{@code method = {GET, POST}}。
+     * 返回空集合表示“未指定方法”（通配）。
+     */
+    private static Set<String> extractRequestMethods(PsiAnnotationMemberValue methodValue) {
+        if (methodValue == null) {
+            return Collections.emptySet();
+        }
+        List<PsiAnnotationMemberValue> values;
+        if (methodValue instanceof PsiArrayInitializerMemberValue) {
+            values = Arrays.asList(((PsiArrayInitializerMemberValue) methodValue).getInitializers());
+        } else {
+            values = Collections.singletonList(methodValue);
+        }
+        Set<String> requestMethods = new LinkedHashSet<>();
+        for (PsiAnnotationMemberValue value : values) {
+            String requestMethod = resolveRequestMethod(value);
+            if (requestMethod != null) {
+                requestMethods.add(requestMethod);
+            }
+        }
+        return requestMethods;
+    }
+
+    /**
+     * 将 method 属性中的一个引用（如 {@code RequestMethod.GET}）解析为标准 HTTP 方法名，解析失败返回 null。
+     */
+    private static String resolveRequestMethod(PsiAnnotationMemberValue methodValue) {
+        if (!(methodValue instanceof PsiReferenceExpression)) {
+            return null;
+        }
+        PsiElement resolvedElement = ((PsiReferenceExpression) methodValue).resolve();
+        if (!(resolvedElement instanceof PsiField)) {
+            return null;
+        }
+        return AnnotationParserUtils.getRequestMethodFromMethodName(((PsiField) resolvedElement).getName());
     }
 }
