@@ -4,6 +4,7 @@ name: Build Plugin
 # - push 到 master / 手动触发 / 提 PR：构建并把 zip 作为 workflow 产物上传（Actions 运行页可下载）
 # - 推送 v* 标签：创建 GitHub Release 并附带 zip
 # - 同一标签且仓库配置了 PUBLISH_TOKEN secret：额外发布到 JetBrains Marketplace
+# - 发布（Release / Marketplace）仅限仓库 owner 推送的、且指向 master 上提交的 v* 标签（release-gate 门禁）
 
 on:
   push:
@@ -59,10 +60,29 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-  release:
-    # 仅在推送 v* 标签时创建 GitHub Release
+  release-gate:
+    # 发布门禁：只有仓库 owner 推送 v* 标签、且标签指向 master 上的提交时才放行
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') &&
+      github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify the tagged commit is on master
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          status=$(gh api "repos/${GITHUB_REPOSITORY}/compare/${GITHUB_SHA}...master" --jq .status)
+          echo "Tagged commit vs master: ${status}"
+          case "$status" in
+            ahead|identical) echo "OK: tag points to a commit on master";;
+            *) echo "::error::The tagged commit is not on master (status=${status}); refusing to release."; exit 1;;
+          esac
+
+  release:
+    # 仅在发布门禁通过后创建 GitHub Release
+    needs: release-gate
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -81,9 +101,8 @@ jobs:
           fail_on_unmatched_files: true
 
   publish-marketplace:
-    # 可选：配置 Secrets.PUBLISH_TOKEN（JetBrains Marketplace 永久令牌）后，打 v* 标签时自动上架
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    # 可选：配置 Secrets.PUBLISH_TOKEN（JetBrains Marketplace 永久令牌）后，发布门禁通过时自动上架
+    needs: release-gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
