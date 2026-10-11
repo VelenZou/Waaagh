@@ -35,6 +35,15 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
   Java / Spring config files are saved or changed on disk (e.g. by Cursor) and synchronized by
   the IDE — the next navigation or gutter request triggers a rescan. Single-method URL copy is
   always recomputed on the spot.
+- **Sandbox plugins are managed by Gradle.** `prepareSandbox_runIde` is a Gradle `Sync` task
+  and `plugins_runIde/` is its destination: whenever it actually runs (e.g. after the plugin jar
+  changed), it rewrites the whole sandbox plugins directory, deleting plugins installed via
+  Settings → Plugins. To keep such plugins, put their directories into
+  `waaagh/.intellijPlatform/sandbox-extra-plugins/` — `build.gradle.kts` adds that directory to
+  the `prepareSandbox_runIde` sync, so a plain `./gradlew runIde` preserves them. Plugins already
+  deleted this way can be restored from the IDE's own download cache: unzip
+  `system_runIde/plugins/*.zip` into `sandbox-extra-plugins/` (or into `plugins_runIde/` when
+  only the current run matters).
 
 ### Build / lint / run (from `waaagh/`)
 - Build: `./gradlew buildPlugin` → `waaagh/build/distributions/waaagh-<version>.zip`

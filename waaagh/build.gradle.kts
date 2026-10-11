@@ -72,6 +72,17 @@ intellijPlatform {
 }
 
 tasks {
+    // 可选的沙盒附加插件：把 marketplace 插件目录放到
+    // waaagh/.intellijPlatform/sandbox-extra-plugins/，prepareSandbox_runIde 会连同构建产物
+    // 一起同步进沙盒。这样即使普通 `./gradlew runIde` 触发重建（Sync），这些常用插件也不会被清掉。
+    // 详见 AGENTS.md 的 “Sandbox sample project” 一节。
+    val sandboxExtraPlugins = layout.projectDirectory.dir(".intellijPlatform/sandbox-extra-plugins")
+    withType<Sync>().configureEach {
+        if (name == "prepareSandbox_runIde") {
+            from(sandboxExtraPlugins)
+        }
+    }
+
     // 保持 Java 11 字节码，兼容旧版本 IDE 的运行时。
     // 用 --release 而不是 source/target：编译器会同时按 Java 11 的 API 签名校验，
     // 防止误用 JDK 12+ 的 API（这类错误只会在老 IDE 的 JBR 上运行时才暴露）。
