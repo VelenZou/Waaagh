@@ -50,7 +50,8 @@ public class C2FLineMarkerProvider extends RelatedItemLineMarkerProvider {
           .setAlignment(RIGHT)
           .setTargets(resultList)
           .setTooltipTitle("Navigate to Targets in Feign");
-      result.add(builder.createLineMarkerInfo(restfulAnnotation));
+      result.add(builder.createLineMarkerInfo(
+          AnnotationParserUtils.lineMarkerLeaf(restfulAnnotation)));
     }
   }
 }
