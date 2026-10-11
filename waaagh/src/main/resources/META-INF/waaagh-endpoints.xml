@@ -1,0 +1,13 @@
+<idea-plugin>
+    <!--
+      WAAAGH 的 Endpoints 工具窗口集成（Ultimate 专属）。
+
+      仅在装有 Endpoints 插件（com.intellij.microservices.ui）的 IDE 中加载，
+      因此 Community 版与老版本 IDE 不会看到、也不会尝试加载这些扩展。
+    -->
+    <extensions defaultExtensionNs="com.intellij.microservices">
+        <!-- 服务端端点：路径由 WAAAGH 解析（context-path + servlet.path + PathMatchConfigurer 前缀 + 映射） -->
+        <endpointsProvider order="last"
+                           implementation="com.waaagh.endpoints.WaaaghEndpointsProvider"/>
+    </extensions>
+</idea-plugin>

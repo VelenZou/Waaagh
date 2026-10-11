@@ -117,6 +117,12 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
+    <!--
+      Endpoints 工具窗口增强（仅 Ultimate）：存在 Endpoints 插件时才加载 waaagh-endpoints.xml，
+      不会影响 Community 版或未启用 Endpoints 的 IDE。
+    -->
+    <depends optional="true" config-file="waaagh-endpoints.xml">com.intellij.microservices.ui</depends>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <!-- Gutter icon navigation -->
