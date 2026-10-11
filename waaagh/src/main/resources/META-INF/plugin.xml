@@ -73,6 +73,13 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.1.2</b>
+            <ul>
+              <li><b>Ctrl+B / Ctrl+Click fix</b>: inside a Feign / Controller method body, fields,
+                  locals, method calls and parameters again open their own declaration — IDEA's
+                  native Go to Declaration is no longer hijacked. The Feign ↔ Controller jump now
+                  applies only when the caret is on the method declaration itself.</li>
+            </ul>
             <b>1.1.0</b>
             <ul>
               <li><b>HTTP method matching</b>: endpoints now match on full path <b>and</b> HTTP method.
