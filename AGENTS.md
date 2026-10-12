@@ -78,3 +78,7 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
   fixtures **`V2UserClient` / `V3OrderClient` / `V2BetaClient`** ↔ **`V2UserApiController` /
   `V3OrderApiController` / `V2BetaApiController`**, negative case **`V2UserClientMissingPrefix`**;
   expected matrix in `waaagh/sample/debug_openfeign/PATH_PREFIX_MATCHING.md`.
+- Call Hierarchy recursion: **`HierarchyClient#tree`** ↔ **`HierarchyServerController#tree`**,
+  with the caller chain **`HierarchyCaller#run` → `#invoke` → feign** and the callee chain
+  **controller → `HierarchyService#buildUser` → `#normalize`**; expected Callers/Callees trees in
+  `waaagh/sample/debug_openfeign/CALL_HIERARCHY.md`.
