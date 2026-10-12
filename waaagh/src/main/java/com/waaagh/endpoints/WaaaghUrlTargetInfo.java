@@ -67,7 +67,7 @@ final class WaaaghUrlTargetInfo implements UrlTargetInfo {
 
     @Override
     public Icon getIcon() {
-        return RestIcons.WAAAGH_ENDPOINT_ICON;
+        return RestIcons.STATEMENT_LINE_FEIGN_ICON;
     }
 
     @Override

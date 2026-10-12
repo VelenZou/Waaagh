@@ -63,7 +63,7 @@ public final class WaaaghEndpointsProvider
         "org.springframework.web.bind.annotation.RestController";
 
     private static final FrameworkPresentation FRAMEWORK_PRESENTATION =
-        new FrameworkPresentation("waaagh", "WAAAGH", RestIcons.WAAAGH_ENDPOINT_ICON);
+        new FrameworkPresentation("waaagh", "WAAAGH", RestIcons.STATEMENT_LINE_FEIGN_ICON);
 
     /** 按 Controller 类分组的端点缓存，随 PSI 修改计数失效。 */
     private static final Key<CachedValue<Map<PsiClass, List<HttpMappingInfo>>>> GROUPED_ENDPOINTS =
@@ -183,7 +183,7 @@ public final class WaaaghEndpointsProvider
             url,
             methods,
             location,
-            RestIcons.WAAAGH_ENDPOINT_ICON,
+            RestIcons.STATEMENT_LINE_FEIGN_ICON,
             deprecated ? CodeInsightColors.DEPRECATED_ATTRIBUTES : null);
     }
 
