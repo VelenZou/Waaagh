@@ -14,7 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Powers Ctrl+B / Ctrl+Click navigation between Feign methods and matching Controllers.
@@ -28,7 +30,8 @@ import java.util.List;
  * {@link GotoDeclarationHandler} returns a non-empty array, the native resolution (which for a method
  * <em>declaration</em> means "show its usages") is skipped. To keep both the Feign &lt;-&gt; Controller
  * mapping and the callers reachable from the same Ctrl+B action, the mapping targets are merged with
- * the declaration's usages (call sites) into a single chooser.
+ * the declaration's usages (call sites) into a single chooser; see {@link UsageGotoTarget} for how the
+ * call sites are presented.
  */
 public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
 
@@ -96,9 +99,11 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
      * Appends the declaration's usages (exact call sites) to {@code targets}, preserving IDEA's native
      * "Go to Declaration or Usages" content when the mapping targets take over the action.
      * <p>
-     * Each usage is the referencing element itself (e.g. the {@code userClient.getUserById} expression),
-     * so selecting it lands precisely on the calling code. The chooser renders it as its source text
-     * (+ module) rather than with a type icon / container, which is the trade-off for exact navigation.
+     * Each usage is wrapped in a {@link UsageGotoTarget}: the chooser renders every row from the
+     * element's own presentation, and a bare usage element has none — it would show as its raw source
+     * text, without icon or location. The wrapper still navigates exactly to the call site, but
+     * presents it as the caller's code line with the caller's icon and an
+     * {@code in Class.method, File.java:42} location (the native "Show Usages" look).
      */
     private static void appendUsageTargets(@NotNull PsiMethod method, @NotNull List<PsiElement> targets) {
         Project project = method.getProject();
@@ -106,6 +111,7 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
             return;
         }
         // The platform invokes GotoDeclarationHandler with read access already held.
+        Set<PsiElement> seen = new HashSet<>();
         int[] added = {0};
         ReferencesSearch.search(method).forEach((PsiReference reference) -> {
             if (added[0] >= MAX_USAGE_TARGETS) {
@@ -118,8 +124,8 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
             if (PsiUtil.isInsideJavadocComment(usage)) {
                 return true;
             }
-            if (usage.isValid() && !targets.contains(usage)) {
-                targets.add(usage);
+            if (usage.isValid() && seen.add(usage)) {
+                targets.add(UsageGotoTarget.of(usage));
                 added[0]++;
             }
             return true;
