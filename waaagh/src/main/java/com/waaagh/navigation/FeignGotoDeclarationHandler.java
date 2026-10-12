@@ -10,6 +10,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtil;
+import com.waaagh.constant.RestIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.Icon;
 
 /**
  * Powers Ctrl+B / Ctrl+Click navigation between Feign methods and matching Controllers.
@@ -30,8 +32,8 @@ import java.util.Set;
  * {@link GotoDeclarationHandler} returns a non-empty array, the native resolution (which for a method
  * <em>declaration</em> means "show its usages") is skipped. To keep both the Feign &lt;-&gt; Controller
  * mapping and the callers reachable from the same Ctrl+B action, the mapping targets are merged with
- * the declaration's usages (call sites) into a single chooser; see {@link UsageGotoTarget} for how the
- * call sites are presented.
+ * the declaration's usages (call sites) into a single chooser; see {@link GotoTargetElement} for how
+ * the targets are presented (WAAAGH jump icons per side, code lines and locations for call sites).
  */
 public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
 
@@ -50,27 +52,39 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
             return null;
         }
 
-        List<PsiElement> targets;
-        if (FeignControllerNavigator.isFeignMethod(method)) {
-            targets = FeignControllerNavigator.findControllers(method);
+        boolean toControllers = FeignControllerNavigator.isFeignMethod(method);
+        List<PsiElement> mapping;
+        Icon sideIcon;
+        if (toControllers) {
+            mapping = FeignControllerNavigator.findControllers(method);
+            sideIcon = RestIcons.STATEMENT_LINE_CONTROLLER_ICON;
         } else if (FeignControllerNavigator.isControllerMethod(method)) {
-            targets = FeignControllerNavigator.findFeignClients(method);
+            mapping = FeignControllerNavigator.findFeignClients(method);
+            sideIcon = RestIcons.STATEMENT_LINE_FEIGN_ICON;
         } else {
             return null;
         }
 
-        if (targets.isEmpty()) {
+        if (mapping.isEmpty()) {
             // Nothing mapped on the other side: stay silent so IDEA's native
             // "Go to Declaration or Usages" handles the declaration.
             return null;
         }
 
+        // Present each side with its own WAAAGH jump icon: blue for the matching Controllers,
+        // orange for the matching Feign clients (the chooser takes the icon from the element).
+        List<PsiElement> targets = new ArrayList<>(mapping.size());
+        for (PsiElement target : mapping) {
+            targets.add(target instanceof PsiMethod
+                    ? GotoTargetElement.forMapping((PsiMethod) target, sideIcon)
+                    : target);
+        }
+
         // A non-empty result replaces the native "or Usages" branch, so merge the declaration's
         // call sites back in — otherwise Ctrl+B on a Feign method could no longer return to the
         // code that calls it (the mapping and the callers are two sides of the same relation).
-        List<PsiElement> merged = new ArrayList<>(targets);
-        appendUsageTargets(method, merged);
-        return merged.toArray(PsiElement.EMPTY_ARRAY);
+        appendUsageTargets(method, targets);
+        return targets.toArray(PsiElement.EMPTY_ARRAY);
     }
 
     /**
@@ -99,7 +113,7 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
      * Appends the declaration's usages (exact call sites) to {@code targets}, preserving IDEA's native
      * "Go to Declaration or Usages" content when the mapping targets take over the action.
      * <p>
-     * Each usage is wrapped in a {@link UsageGotoTarget}: the chooser renders every row from the
+     * Each usage is wrapped in a {@link GotoTargetElement}: the chooser renders every row from the
      * element's own presentation, and a bare usage element has none — it would show as its raw source
      * text, without icon or location. The wrapper still navigates exactly to the call site, but
      * presents it as the caller's code line with the caller's icon and an
@@ -125,7 +139,7 @@ public class FeignGotoDeclarationHandler implements GotoDeclarationHandler {
                 return true;
             }
             if (usage.isValid() && seen.add(usage)) {
-                targets.add(UsageGotoTarget.of(usage));
+                targets.add(GotoTargetElement.forUsage(usage));
                 added[0]++;
             }
             return true;

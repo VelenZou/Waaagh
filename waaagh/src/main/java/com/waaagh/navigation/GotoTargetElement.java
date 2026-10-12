@@ -1,8 +1,11 @@
 package com.waaagh.navigation;
 
 import com.intellij.ide.util.EditSourceUtil;
+import com.intellij.navigation.ColoredItemPresentation;
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.pom.Navigatable;
@@ -12,6 +15,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMember;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.impl.FakePsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Objects;
@@ -20,48 +24,87 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A call-site entry of the Ctrl+B chooser ("Go to Declaration or Usages").
+ * A chooser entry of the Ctrl+B popup ("Go to Declaration or Usages").
  * <p>
- * A bare usage element (a reference expression, a method call, ...) has no navigation presentation:
- * the chooser would render it as its raw source text, without an icon and without a container /
- * location string. The chooser builds every row from the element itself
- * ({@link NavigationItem#getPresentation()} text, {@link PsiElement#getIcon(int)} icon, containing
- * file for the module line), so this wrapper carries the presentation of the caller: the code line,
- * the caller's icon and an {@code in Class.member, File.java:42} location — while still navigating
- * exactly to the usage.
+ * The chooser builds every row from the element itself: the text comes from
+ * {@link NavigationItem#getPresentation()}, the icon from {@link PsiElement#getIcon(int)} and the
+ * module line from the containing file. Raw handler results do not always fit that contract — a bare
+ * usage element (a reference expression) has no presentation at all and a mapped method always shows
+ * its Java icon. This wrapper supplies both:
+ * <ul>
+ *   <li>mapping targets ({@link #forMapping}) — the Feign/Controller method with its native
+ *       signature, but presented with the WAAAGH jump icon of its side (orange Feign / blue
+ *       Controller);</li>
+ *   <li>call sites ({@link #forUsage}) — the caller's code line, icon and
+ *       {@code in Class.member, File.java:42} location (the native "Show Usages" look).</li>
+ * </ul>
+ * In both cases navigation still lands exactly on the wrapped element.
  */
-final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
+final class GotoTargetElement extends FakePsiElement implements NavigationItem, ColoredItemPresentation {
 
-    private final PsiElement usage;
+    /** The element the chooser item navigates to (a mapped method or a call site). */
+    private final PsiElement target;
 
-    /** Source line of the usage (or the usage text when the line cannot be read). */
+    /** Short name for legacy renderers and speed search. */
+    private final String name;
+
+    /** Row text: the method signature for mapping targets, the source line for call sites. */
     private final String text;
 
-    /** {@code in Class.member, File.java:42}; {@code null} when nothing could be collected. */
+    /** {@code (in Class)} / {@code in Class.member, File.java:42}; {@code null} when unknown. */
     @Nullable
     private final String location;
 
     @Nullable
     private final Icon icon;
 
-    private UsageGotoTarget(@NotNull PsiElement usage,
-                            @NotNull String text,
-                            @Nullable String location,
-                            @Nullable Icon icon) {
-        this.usage = usage;
+    /** Preserves the deprecation colouring of the wrapped element, when it has one. */
+    @Nullable
+    private final TextAttributesKey attributesKey;
+
+    private GotoTargetElement(@NotNull PsiElement target,
+                              @NotNull String name,
+                              @NotNull String text,
+                              @Nullable String location,
+                              @Nullable Icon icon,
+                              @Nullable TextAttributesKey attributesKey) {
+        this.target = target;
+        this.name = name;
         this.text = text;
         this.location = location;
         this.icon = icon;
+        this.attributesKey = attributesKey;
     }
 
-    static @NotNull UsageGotoTarget of(@NotNull PsiElement usage) {
+    /**
+     * A matched Feign / Controller method, presented with the WAAAGH jump icon of the other side
+     * (the signature and the location stay the native Java ones).
+     */
+    static @NotNull GotoTargetElement forMapping(@NotNull PsiMethod method, @NotNull Icon icon) {
+        String name = method.getName();
+        ItemPresentation presentation = method.getPresentation();
+        if (presentation == null) {
+            return new GotoTargetElement(method, name, name, null, icon, null);
+        }
+        String text = presentation.getPresentableText();
+        TextAttributesKey attributesKey = presentation instanceof ColoredItemPresentation
+                ? ((ColoredItemPresentation) presentation).getTextAttributesKey()
+                : null;
+        return new GotoTargetElement(method, name, text == null ? name : text,
+                presentation.getLocationString(), icon, attributesKey);
+    }
+
+    /** A call site, presented as the caller's code line with the caller's icon and location. */
+    static @NotNull GotoTargetElement forUsage(@NotNull PsiElement usage) {
         PsiMember caller = PsiTreeUtil.getParentOfType(usage, PsiMember.class, false);
-        return new UsageGotoTarget(usage, lineText(usage), locationText(usage, caller), icon(usage, caller));
+        String line = lineText(usage);
+        return new GotoTargetElement(usage, line, line, locationText(usage, caller),
+                icon(usage, caller), null);
     }
 
     @NotNull
-    PsiElement getUsage() {
-        return usage;
+    PsiElement getTarget() {
+        return target;
     }
 
     private static @NotNull String lineText(@NotNull PsiElement usage) {
@@ -134,8 +177,8 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
     }
 
     @Nullable
-    private static PsiFile containingFile(@NotNull PsiElement usage) {
-        return usage.isValid() ? usage.getContainingFile() : null;
+    private static PsiFile containingFile(@NotNull PsiElement element) {
+        return element.isValid() ? element.getContainingFile() : null;
     }
 
     // ------------------------------------------------------------------
@@ -144,7 +187,7 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
 
     @Override
     public String getName() {
-        return text;
+        return name;
     }
 
     @Override
@@ -156,6 +199,11 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
     public String getLocationString() {
         // The chooser wraps a non-null location in " (...)", so keep it empty instead of "".
         return location == null || location.isEmpty() ? null : location;
+    }
+
+    @Override
+    public TextAttributesKey getTextAttributesKey() {
+        return attributesKey;
     }
 
     @Override
@@ -174,27 +222,27 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
 
     @Override
     public PsiElement getParent() {
-        return usage.getParent();
+        return target.getParent();
     }
 
     @Override
     public PsiFile getContainingFile() {
-        return containingFile(usage);
+        return containingFile(target);
     }
 
     @Override
     public Project getProject() {
-        return usage.getProject();
+        return target.getProject();
     }
 
     @Override
     public PsiManager getManager() {
-        return PsiManager.getInstance(usage.getProject());
+        return PsiManager.getInstance(target.getProject());
     }
 
     @Override
     public PsiElement getNavigationElement() {
-        return usage;
+        return target;
     }
 
     @Override
@@ -204,7 +252,7 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
 
     @Override
     public TextRange getTextRange() {
-        return usage.isValid() ? usage.getTextRange() : null;
+        return target.isValid() ? target.getTextRange() : null;
     }
 
     @Override
@@ -215,7 +263,7 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
 
     @Override
     public boolean isValid() {
-        return usage.isValid();
+        return target.isValid();
     }
 
     // ------------------------------------------------------------------
@@ -224,39 +272,39 @@ final class UsageGotoTarget extends FakePsiElement implements NavigationItem {
 
     @Override
     public boolean canNavigate() {
-        Navigatable target = descriptor();
-        return target != null && target.canNavigate();
+        Navigatable descriptor = descriptor();
+        return descriptor != null && descriptor.canNavigate();
     }
 
     @Override
     public boolean canNavigateToSource() {
-        Navigatable target = descriptor();
-        return target != null && target.canNavigateToSource();
+        Navigatable descriptor = descriptor();
+        return descriptor != null && descriptor.canNavigateToSource();
     }
 
     @Override
     public void navigate(boolean requestFocus) {
-        Navigatable target = descriptor();
-        if (target != null) {
-            target.navigate(requestFocus);
+        Navigatable descriptor = descriptor();
+        if (descriptor != null) {
+            descriptor.navigate(requestFocus);
         }
     }
 
     @Nullable
     private Navigatable descriptor() {
-        if (!usage.isValid()) {
+        if (!target.isValid()) {
             return null;
         }
-        return usage instanceof Navigatable ? (Navigatable) usage : EditSourceUtil.getDescriptor(usage);
+        return target instanceof Navigatable ? (Navigatable) target : EditSourceUtil.getDescriptor(target);
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof UsageGotoTarget && usage.equals(((UsageGotoTarget) other).usage);
+        return other instanceof GotoTargetElement && target.equals(((GotoTargetElement) other).target);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(usage);
+        return Objects.hashCode(target);
     }
 }
