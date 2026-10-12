@@ -44,6 +44,15 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
   deleted this way can be restored from the IDE's own download cache: unzip
   `system_runIde/plugins/*.zip` into `sandbox-extra-plugins/` (or into `plugins_runIde/` when
   only the current run matters).
+- **Never copy a new plugin jar into a running sandbox.** The sandbox IDE runs with
+  `-Didea.auto.reload.plugins=true` and `-Didea.required.plugins.id=com.waaagh`, so a jar change
+  under `plugins_runIde/waaagh/lib/` triggers `DynamicPlugins` to dynamically *unload* WAAAGH;
+  unloading a required plugin fails ("was expected not to be loaded but was included in the module
+  graph") and the IDE may end up with the whole `plugins_runIde/waaagh` directory deleted, so
+  WAAAGH silently stops loading (no gutter icons, no navigation). Deploy either while the sandbox
+  is closed, or let Gradle do it: run `./gradlew prepareSandbox_runIde` (Sync) and then restart
+  the IDE. If the directory is already gone, restoring it is enough: `./gradlew prepareSandbox_runIde`
+  re-creates `plugins_runIde/waaagh` from the build output + extras.
 
 ### Build / lint / run (from `waaagh/`)
 - Build: `./gradlew buildPlugin` → `waaagh/build/distributions/waaagh-<version>.zip`
