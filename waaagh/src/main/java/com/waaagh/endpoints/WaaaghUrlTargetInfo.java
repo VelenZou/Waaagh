@@ -6,7 +6,6 @@ import com.intellij.microservices.url.UrlPath;
 import com.intellij.microservices.url.UrlTargetInfo;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.waaagh.constant.RestIcons;
 import com.waaagh.entity.HttpMappingInfo;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -36,13 +35,17 @@ final class WaaaghUrlTargetInfo implements UrlTargetInfo {
 
     private final boolean deprecated;
 
+    private final Icon icon;
+
     WaaaghUrlTargetInfo(@NotNull UrlPath path,
                         @NotNull List<Authority> authorities,
-                        @NotNull HttpMappingInfo mapping) {
+                        @NotNull HttpMappingInfo mapping,
+                        @NotNull Icon icon) {
         this.schemes = UrlConstants.HTTP_SCHEMES;
         this.path = path;
         this.authorities = authorities;
         this.mapping = mapping;
+        this.icon = icon;
         Set<String> requestMethods = mapping.getRequestMethods();
         this.methods = requestMethods == null || requestMethods.isEmpty()
             ? Collections.emptySet()
@@ -67,7 +70,7 @@ final class WaaaghUrlTargetInfo implements UrlTargetInfo {
 
     @Override
     public Icon getIcon() {
-        return RestIcons.STATEMENT_LINE_FEIGN_ICON;
+        return icon;
     }
 
     @Override

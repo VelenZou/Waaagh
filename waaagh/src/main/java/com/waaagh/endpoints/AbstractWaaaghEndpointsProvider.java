@@ -1,7 +1,6 @@
 package com.waaagh.endpoints;
 
 import com.intellij.microservices.endpoints.EndpointType;
-import com.intellij.microservices.endpoints.EndpointTypes;
 import com.intellij.microservices.endpoints.EndpointsFilter;
 import com.intellij.microservices.endpoints.EndpointsUrlTargetProvider;
 import com.intellij.microservices.endpoints.FrameworkPresentation;
@@ -29,11 +28,8 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
-import com.intellij.psi.util.PsiModificationTracker;
 import com.waaagh.cache.BilateralCacheManager;
-import com.waaagh.constant.RestIcons;
 import com.waaagh.entity.HttpMappingInfo;
-import com.waaagh.utils.ControllerClassScanUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,40 +39,66 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * WAAAGH 在 Endpoints 工具窗口中提供的服务端端点视图。
+ * WAAAGH Endpoints 提供者的公共实现：组 = 端点方法所属类（Controller / Feign 接口），
+ * 端点 = WAAAGH 解析出的 {@link HttpMappingInfo}（完整路径、HTTP 方法、文档元素）。
  * <p>
- * 与 Spring MVC 内置条目的差异：这里的路径完全由 WAAAGH 的解析链得出
- * （server.servlet.context-path + spring.mvc.servlet.path + PathMatchConfigurer 前缀 + 类/方法映射），
- * 因此 {@code WaaaghPathPrefixConfig} 这类动态前缀也包含在内。
- * <p>
- * 该类只在存在 Endpoints 插件（Ultimate）的 IDE 中通过 waaagh-endpoints.xml 注册并加载。
+ * 子类只区分框架元信息（图标 / 标题 / Type）与扫描数据源（MVC Controller 或 Feign Client）。
+ * 这些类只在存在 Endpoints 插件（Ultimate）的 IDE 中通过 waaagh-endpoints.xml 注册并加载。
  */
-public final class WaaaghEndpointsProvider
+abstract class AbstractWaaaghEndpointsProvider
     implements EndpointsUrlTargetProvider<PsiClass, HttpMappingInfo> {
 
-    private static final String CONTROLLER_ANNOTATION = "org.springframework.stereotype.Controller";
+    /** 每个子类一个分组缓存 Key（按端点方法所属类分组）。 */
+    private static final Map<String, Key<CachedValue<Map<PsiClass, List<HttpMappingInfo>>>>> GROUPED_KEYS =
+        new ConcurrentHashMap<>();
 
-    private static final String REST_CONTROLLER_ANNOTATION =
-        "org.springframework.web.bind.annotation.RestController";
+    private volatile FrameworkPresentation presentation;
 
-    private static final FrameworkPresentation FRAMEWORK_PRESENTATION =
-        new FrameworkPresentation("waaagh", "WAAAGH", RestIcons.STATEMENT_LINE_FEIGN_ICON);
+    // ------------------------------------------------------------------
+    // 子类差异
+    // ------------------------------------------------------------------
 
-    /** 按 Controller 类分组的端点缓存，随 PSI 修改计数失效。 */
-    private static final Key<CachedValue<Map<PsiClass, List<HttpMappingInfo>>>> GROUPED_ENDPOINTS =
-        Key.create("com.waaagh.endpoints.grouped");
+    /** Framework 筛选器的查询标记，例如 {@code framework:waaagh-mvc}。 */
+    protected abstract String frameworkId();
+
+    /** Framework 筛选器与条目上展示的框架名。 */
+    protected abstract String frameworkTitle();
+
+    protected abstract Icon icon();
+
+    protected abstract EndpointType type();
+
+    /** classpath 上存在其中任意一个类时，该框架出现在 Endpoints 中。 */
+    protected abstract String[] frameworkClassNames();
+
+    protected abstract boolean fullyScanned(@NotNull Project project);
+
+    protected abstract void scan(@NotNull Project project);
+
+    protected abstract Map<String, HttpMappingInfo> caches(@NotNull Project project);
+
+    // ------------------------------------------------------------------
+    // EndpointsProvider
+    // ------------------------------------------------------------------
 
     @Override
     public EndpointType getEndpointType() {
-        return EndpointTypes.HTTP_SERVER_TYPE;
+        return type();
     }
 
     @Override
     public FrameworkPresentation getPresentation() {
-        return FRAMEWORK_PRESENTATION;
+        FrameworkPresentation current = presentation;
+        if (current == null) {
+            current = new FrameworkPresentation(frameworkId(), frameworkTitle(), icon());
+            presentation = current;
+        }
+        return current;
     }
 
     @Override
@@ -85,16 +107,20 @@ public final class WaaaghEndpointsProvider
             return Status.UNAVAILABLE;
         }
         // getStatus 可能在 EDT 上被调用（框架筛选器），需要读锁
-        boolean hasSpringMvc = ApplicationManager.getApplication().runReadAction(
-            (Computable<Boolean>) () -> hasSpringMvcLibrary(project));
-        return hasSpringMvc ? Status.HAS_ENDPOINTS : Status.UNAVAILABLE;
+        boolean available = ApplicationManager.getApplication().runReadAction(
+            (Computable<Boolean>) () -> hasFrameworkClass(project));
+        return available ? Status.HAS_ENDPOINTS : Status.UNAVAILABLE;
     }
 
-    private static boolean hasSpringMvcLibrary(@NotNull Project project) {
+    private boolean hasFrameworkClass(@NotNull Project project) {
         JavaPsiFacade facade = JavaPsiFacade.getInstance(project);
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
-        return facade.findClass(CONTROLLER_ANNOTATION, scope) != null
-            || facade.findClass(REST_CONTROLLER_ANNOTATION, scope) != null;
+        for (String className : frameworkClassNames()) {
+            if (facade.findClass(className, scope) != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -118,21 +144,21 @@ public final class WaaaghEndpointsProvider
 
         Set<PsiClass> groups = new LinkedHashSet<>();
         ProjectFileIndex fileIndex = ProjectFileIndex.getInstance(project);
-        for (PsiClass controllerClass : grouped.keySet()) {
-            if (!controllerClass.isValid()) {
+        for (PsiClass endpointClass : grouped.keySet()) {
+            if (!endpointClass.isValid()) {
                 continue;
             }
-            if (module != null && !module.equals(ModuleUtilCore.findModuleForPsiElement(controllerClass))) {
+            if (module != null && !module.equals(ModuleUtilCore.findModuleForPsiElement(endpointClass))) {
                 continue;
             }
-            VirtualFile file = virtualFileOf(controllerClass);
+            VirtualFile file = virtualFileOf(endpointClass);
             if (file == null) {
                 continue;
             }
             if (!fromTests && fileIndex.isInTestSourceContent(file)) {
                 continue;
             }
-            groups.add(controllerClass);
+            groups.add(endpointClass);
         }
         return groups;
     }
@@ -183,13 +209,15 @@ public final class WaaaghEndpointsProvider
             url,
             methods,
             location,
-            RestIcons.STATEMENT_LINE_FEIGN_ICON,
+            icon(),
             deprecated ? CodeInsightColors.DEPRECATED_ATTRIBUTES : null);
     }
 
     @Override
     public ModificationTracker getModificationTracker(@NotNull Project project) {
-        return PsiModificationTracker.getInstance(project);
+        // WAAAGH 自己的数据版本（缓存清理 / 全量扫描完成时变化），而不是全局 PSI 计数：
+        // 后者会让 Endpoints 视图在 HTTP Client 面板自身产生的 PSI 变化上反复重载（面板抖动）。
+        return BilateralCacheManager.getModificationTracker(project);
     }
 
     @Override
@@ -207,7 +235,7 @@ public final class WaaaghEndpointsProvider
     @Override
     public Iterable<UrlTargetInfo> getUrlTargetInfo(@NotNull PsiClass group,
                                                     @NotNull HttpMappingInfo endpoint) {
-        return Collections.singletonList(WaaaghEndpointsUtil.createUrlTargetInfo(endpoint));
+        return Collections.singletonList(WaaaghEndpointsUtil.createUrlTargetInfo(endpoint, icon()));
     }
 
     // ------------------------------------------------------------------
@@ -215,50 +243,52 @@ public final class WaaaghEndpointsProvider
     // ------------------------------------------------------------------
 
     /**
-     * 全量扫描（如未完成）并按 Controller 类分组。
-     * 分组结果缓存在 Project 上，依赖 PSI 修改计数；底层数据来自 WAAAGH 的双向缓存，
-     * 该缓存在文件保存 / 外部修改同步后由监听器清理，下次查询自动重扫。
+     * 全量扫描（如未完成）并按端点方法所属类分组。
+     * 分组结果缓存在 Project 上，依赖 WAAAGH 数据版本；
+     * 底层缓存在文件保存 / 外部修改同步后由监听器清理，下次查询自动重扫。
      */
     @NotNull
-    private static Map<PsiClass, List<HttpMappingInfo>> groupedEndpoints(@NotNull Project project) {
+    private Map<PsiClass, List<HttpMappingInfo>> groupedEndpoints(@NotNull Project project) {
         if (project.isDisposed() || DumbService.isDumb(project)) {
             return Collections.emptyMap();
         }
+        Key<CachedValue<Map<PsiClass, List<HttpMappingInfo>>>> key = GROUPED_KEYS.computeIfAbsent(
+            getClass().getName(), name -> Key.create(name));
         return CachedValuesManager.getManager(project).getCachedValue(
             project,
-            GROUPED_ENDPOINTS,
+            key,
             () -> CachedValueProvider.Result.create(
-                buildGroupedEndpoints(project), PsiModificationTracker.getInstance(project)),
+                buildGroupedEndpoints(project), BilateralCacheManager.getModificationTracker(project)),
             false);
     }
 
     @NotNull
-    private static Map<PsiClass, List<HttpMappingInfo>> buildGroupedEndpoints(@NotNull Project project) {
-        if (!BilateralCacheManager.isControllerFullyScanned(project)) {
-            ControllerClassScanUtils.scanControllerPaths(project);
+    private Map<PsiClass, List<HttpMappingInfo>> buildGroupedEndpoints(@NotNull Project project) {
+        if (!fullyScanned(project)) {
+            scan(project);
         }
-        Map<String, HttpMappingInfo> caches = BilateralCacheManager.queryControllerCaches(project);
+        Map<String, HttpMappingInfo> caches = caches(project);
         if (caches == null || caches.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<PsiClass, List<HttpMappingInfo>> grouped = new LinkedHashMap<>();
         for (HttpMappingInfo mapping : caches.values()) {
-            PsiClass controllerClass = controllerClassOf(mapping);
-            if (controllerClass == null) {
+            PsiClass endpointClass = endpointClassOf(mapping);
+            if (endpointClass == null) {
                 continue;
             }
-            grouped.computeIfAbsent(controllerClass, key -> new ArrayList<>()).add(mapping);
+            grouped.computeIfAbsent(endpointClass, key -> new ArrayList<>()).add(mapping);
         }
         return grouped;
     }
 
-    private static PsiClass controllerClassOf(@NotNull HttpMappingInfo mapping) {
+    private static PsiClass endpointClassOf(@NotNull HttpMappingInfo mapping) {
         PsiMethod method = mapping.getPsiMethod();
         if (!WaaaghEndpointsUtil.isUsable(method)) {
             return null;
         }
-        PsiClass controllerClass = method.getContainingClass();
-        return controllerClass != null && controllerClass.isValid() ? controllerClass : null;
+        PsiClass containingClass = method.getContainingClass();
+        return containingClass != null && containingClass.isValid() ? containingClass : null;
     }
 
     private static boolean isSameClass(@NotNull PsiClass left, @NotNull PsiClass right) {

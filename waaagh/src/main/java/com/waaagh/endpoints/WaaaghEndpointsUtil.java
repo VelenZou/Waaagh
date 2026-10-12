@@ -12,6 +12,7 @@ import com.waaagh.entity.HttpMappingInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,9 +65,9 @@ final class WaaaghEndpointsUtil {
     }
 
     @NotNull
-    static UrlTargetInfo createUrlTargetInfo(@NotNull HttpMappingInfo endpoint) {
+    static UrlTargetInfo createUrlTargetInfo(@NotNull HttpMappingInfo endpoint, @NotNull Icon icon) {
         String url = normalizeUrl(endpoint.getPath());
-        return new WaaaghUrlTargetInfo(parsePath(url), authorities(), endpoint);
+        return new WaaaghUrlTargetInfo(parsePath(url), authorities(), endpoint, icon);
     }
 
     /**

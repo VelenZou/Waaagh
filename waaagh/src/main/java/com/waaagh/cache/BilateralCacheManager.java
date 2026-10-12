@@ -1,6 +1,7 @@
 package com.waaagh.cache;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.psi.PsiMethod;
 import com.waaagh.entity.HttpMappingInfo;
 import com.waaagh.utils.AnnotationParserUtils;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -35,6 +37,15 @@ public class BilateralCacheManager {
   private static final Set<String> PROJECT_FEIGN_FULLY_SCANNED = ConcurrentHashMap.newKeySet();
 
   /**
+   * 每个项目的数据版本号：仅在缓存被清理（文件保存 / 外部修改同步）或全量扫描完成时 +1。
+   * <p>
+   * Endpoints 等外部视图订阅它来判断"mapping 数据是否变了"。
+   * 不要用全局 PsiModificationTracker：任何 PSI 变化（包括 HTTP Client 面板自身产生的）
+   * 都会触发视图重载，形成 重载 → 面板刷新 → PSI 变化 → 重载 的抖动循环。
+   */
+  private static final Map<String, AtomicLong> PROJECT_DATA_VERSION = new ConcurrentHashMap<>();
+
+  /**
    * 清除指定项目的所有缓存。
    * 调用方：项目关闭（CacheCleanListener）、源码文件保存/外部修改后（VfsCacheRefreshListener）。
    */
@@ -44,6 +55,21 @@ public class BilateralCacheManager {
     PROJECT_FEIGN_CACHE_MAP.remove(projectId);
     PROJECT_CONTROLLER_FULLY_SCANNED.remove(projectId);
     PROJECT_FEIGN_FULLY_SCANNED.remove(projectId);
+    bumpDataVersion(project);
+  }
+
+  /**
+   * 当前项目 mapping 数据的修改追踪器（Endpoints provider 使用）。
+   */
+  public static ModificationTracker getModificationTracker(Project project) {
+    AtomicLong version = PROJECT_DATA_VERSION.computeIfAbsent(getProjectId(project),
+        key -> new AtomicLong());
+    return version::get;
+  }
+
+  private static void bumpDataVersion(Project project) {
+    PROJECT_DATA_VERSION.computeIfAbsent(getProjectId(project), key -> new AtomicLong())
+        .incrementAndGet();
   }
 
   public static boolean isControllerFullyScanned(Project project) {
@@ -86,6 +112,7 @@ public class BilateralCacheManager {
       String qualifier = buildKey(controller.getPsiMethod());
       qualifier2Info.put(qualifier, controller);
     }
+    bumpDataVersion(project);
   }
 
   /**
@@ -98,6 +125,7 @@ public class BilateralCacheManager {
       String qualifier = buildKey(feign.getPsiMethod());
       qualifier2Info.put(qualifier, feign);
     }
+    bumpDataVersion(project);
   }
 
   /**
