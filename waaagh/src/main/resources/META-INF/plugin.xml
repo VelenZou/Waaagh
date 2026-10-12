@@ -73,6 +73,16 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.1.3</b>
+            <ul>
+              <li><b>Ctrl+B keeps IDEA's own results</b>: on a Feign / Controller method declaration,
+                  Ctrl+B now shows the matching endpoints <b>and</b> the method's usages (the code that
+                  calls it) in a single chooser, instead of replacing IDEA's "Go to Declaration or
+                  Usages". You can jump to the counterpart <i>and</i> back to the call site again.</li>
+              <li><b>Call Hierarchy keeps walking</b>: the Callers tree now continues above a Feign client
+                  (the code that calls it) and the Callees tree continues into the Controller
+                  implementation, instead of stopping at the first Feign ↔ Controller hop.</li>
+            </ul>
             <b>1.1.2</b>
             <ul>
               <li><b>Ctrl+B / Ctrl+Click fix</b>: inside a Feign / Controller method body, fields,

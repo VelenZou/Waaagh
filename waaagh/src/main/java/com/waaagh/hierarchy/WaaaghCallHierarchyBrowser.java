@@ -14,7 +14,8 @@ import org.jetbrains.annotations.NotNull;
  *     <li>Feign method → <b>Callees</b> are the matching Controllers;</li>
  *     <li>Controller method → <b>Callers</b> are the matching Feign clients.</li>
  * </ul>
- * The opposite view of each (and everything non-mapping) falls back to the standard Java tree.
+ * Both trees stay recursive: each node is additionally expanded with its own Java callers / callees,
+ * so the hierarchy keeps walking past the Feign/Controller edge in both directions.
  */
 public class WaaaghCallHierarchyBrowser extends CallHierarchyBrowser {
 
@@ -40,15 +41,14 @@ public class WaaaghCallHierarchyBrowser extends CallHierarchyBrowser {
     @Override
     protected HierarchyTreeStructure createHierarchyTreeStructure(@NotNull String typeName,
                                                                   @NotNull PsiElement psiElement) {
-        if (isCalleeType(typeName)
-                && psiElement instanceof PsiMethod
-                && FeignControllerNavigator.isFeignMethod((PsiMethod) psiElement)) {
-            return new FeignCalleeMethodsTreeStructure(myProject, (PsiMethod) psiElement);
-        }
-        if (isCallerType(typeName)
-                && psiElement instanceof PsiMethod
-                && FeignControllerNavigator.isControllerMethod((PsiMethod) psiElement)) {
-            return new FeignControllerCallerMethodsTreeStructure(myProject, (PsiMethod) psiElement);
+        if (psiElement instanceof PsiMethod) {
+            PsiMethod method = (PsiMethod) psiElement;
+            if (isCalleeType(typeName)) {
+                return new WaaaghCalleeTreeStructure(myProject, method, getCurrentScopeType());
+            }
+            if (isCallerType(typeName)) {
+                return new WaaaghCallerTreeStructure(myProject, method, getCurrentScopeType());
+            }
         }
         return super.createHierarchyTreeStructure(typeName, psiElement);
     }
