@@ -7,7 +7,7 @@ plugins {
 
 group = "com.waaagh"
 // CI can override via -PpluginVersion=1.2.3 (e.g. from a v* git tag)
-version = (findProperty("pluginVersion") as String?) ?: "1.1.0"
+version = (findProperty("pluginVersion") as String?) ?: "1.2.0"
 
 repositories {
     mavenCentral()
