@@ -71,6 +71,19 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
   JetBrains Marketplace access to resolve transitive plugin dependencies. 2026.2.3 is covered by
   building and running the plugin in the sandbox (`runIde`) instead.
 
+### Icons (why IconProvider, not gotoTargetPresentationProvider)
+- All WAAAGH jump icons go through `com.waaagh.provider.FeignMethodIconProvider` /
+  `RestControllerMethodIconProvider`, which match a **Feign / Controller method** (and its name
+  identifier) and are consulted via `PsiElement#getIcon`.
+- The Ctrl+Alt+B ("Go to Implementation") popup renders each entry through the Java plugin's own
+  `JavaGotoTargetPresentationProvider` → `PsiElementRenderingInfo`, whose icon is `method.getIcon()`,
+  so the `IconProvider` covers it. A custom `gotoTargetPresentationProvider` was tried and **does not
+  take effect** there (its `TargetPresentation` is not used for rendering) — it also dragged the
+  `TargetPresentation` API (moved package in 2023.2) in and forced a higher `since-build`. Don't
+  reintroduce it.
+- Consequence: `com.intellij.modules.java` is a hard dependency and every place that renders a Feign /
+  Controller *method* icon (Structure view, completion, ...) shows the WAAAGH icon. That is intended.
+
 ### Sample fixtures
 - Matching pair: **`UserClient` → `UserServerController`** (`/hello/world/user/...`).
 - Multi-target & shape cases: **`UserDeleteClient`** (second caller), **`UserClientSamePaths`**

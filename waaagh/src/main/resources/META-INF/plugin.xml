@@ -83,6 +83,13 @@
               <li><b>Call Hierarchy keeps walking</b>: the Callers tree now continues above a Feign client
                   (the code that calls it) and the Callees tree continues into the Controller
                   implementation, instead of stopping at the first Feign ↔ Controller hop.</li>
+              <li><b>Mapping icons no longer leak</b>: the WAAAGH jump icons shown for the Feign ↔ Controller
+                  mapping entries in that popup now come from the method declaration only. The
+                  experimental editor-tab / project-tree class icons (and their setting) were removed,
+                  so native usages, tabs and the project tree keep IDEA's own icons.</li>
+              <li><b>Go to Implementation icons</b>: <code>Ctrl+Alt+B</code> now shows the matching endpoints
+                  with the WAAAGH jump icon too (blue for Controllers, orange for Feign clients); the rest
+                  of the popup stays native.</li>
             </ul>
             <b>1.1.2</b>
             <ul>
@@ -148,6 +155,8 @@
 
         <!-- Go to Implementation (Ctrl+Alt+B) -->
         <definitionsScopedSearch implementation="com.waaagh.navigation.FeignDefinitionsSearcher"/>
+        <!-- The WAAAGH jump icon on those entries comes from the IconProviders above (the popup resolves
+             each entry's icon through PsiElement#getIcon), so no gotoTargetPresentationProvider is needed. -->
 
         <!--
           Go to Declaration / Ctrl+Click. Only the Show Usages popup (USAGES_WITH_DEFAULT_OPTIONS) is
@@ -166,12 +175,18 @@
                            displayType="BALLOON"
                            key="notification.group.name"/>
 
-        <iconProvider id="com.waaagh.provider.tabIcon.FeignClassIconProvider"
-                      implementation="com.waaagh.provider.tabIcon.FeignClassIconProvider"/>
-        <iconProvider id="com.waaagh.provider.tabIcon.RestControllerIconProvider"
-                      implementation="com.waaagh.provider.tabIcon.RestControllerIconProvider"/>
-
-        <applicationConfigurable implementation="com.waaagh.user.UserPluginConfigurableUI"/>
+        <!--
+          WAAAGH jump icons for Feign / Controller methods - both the method itself (the Ctrl+Alt+B
+          "Go to Implementation" entries resolve their icon through PsiElement#getIcon) and the name
+          identifier the Ctrl+B mapping entries point at. Bound to the method / its identifier rather
+          than to the Feign / Controller class: a class-level override also repaints every usage whose
+          containing class is a Feign / Controller, plus the editor tabs and the project tree.
+          See FeignMethodIconProvider.
+        -->
+        <iconProvider id="com.waaagh.provider.FeignMethodIconProvider"
+                      implementation="com.waaagh.provider.FeignMethodIconProvider"/>
+        <iconProvider id="com.waaagh.provider.RestControllerMethodIconProvider"
+                      implementation="com.waaagh.provider.RestControllerMethodIconProvider"/>
 
     </extensions>
 
