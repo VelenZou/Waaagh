@@ -71,7 +71,7 @@ export JAVA_HOME=/path/to/jdk-25
 ./gradlew buildPlugin
 ```
 
-产物：`waaagh/build/distributions/waaagh-1.1.0.zip`
+产物：`waaagh/build/distributions/waaagh-<version>.zip`（可用 `-PpluginVersion=1.2.3` 覆盖版本号）
 
 启动沙盒 IDE：
 
