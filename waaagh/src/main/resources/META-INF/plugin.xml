@@ -4,37 +4,54 @@
     <name>WAAAGH</name>
     <vendor email="velenzou@users.noreply.github.com" url="https://github.com/velenzou/waaagh">velenzou</vendor>
 
-    <description><![CDATA[WAAAGH — Feign / Controller navigation for Spring Cloud projects.
+    <description><![CDATA[WAAAGH — Feign/Controller navigation for Spring Cloud projects.
             <br><br>
             WAAAGH is an IntelliJ IDEA plugin collection; popular tools may later be split into
-            standalone plugins. This tool connects Spring Cloud <code>@FeignClient</code> interfaces
-            with the <code>@RestController</code> / <code>@Controller</code> endpoints they map to,
-            right inside the editor.
+            standalone plugins. This tool resolves which Spring Cloud <code>@FeignClient</code> method
+            matches which Spring MVC <code>@RestController</code> / <code>@Controller</code> endpoint
+            (full path + HTTP method) and exposes that mapping through IDEA's own surfaces.
             <br><br>
-            <b>Features</b>
+            <b>Editor navigation</b>
             <ul>
-              <li><b>Bidirectional navigation</b> — matching methods show a gutter icon; click it to jump
-                  between a Feign method and its Controller endpoint.</li>
-              <li><b>Go to Declaration / Implementation</b> — <code>Ctrl+B</code> / <code>Ctrl+Click</code>
-                  and <code>Ctrl+Alt+B</code> work between Feign clients and Controllers.</li>
-              <li><b>Call Hierarchy</b> — on a Feign method, Callees list the Controller methods it maps to;
-                  on a Controller method, Callers list the Feign methods that reach it.</li>
-              <li><b>Copy URL</b> — click the clipboard gutter icon to copy the complete request URL
-                  (context path + servlet path + package prefix + class path + method path).</li>
-              <li><b>Accurate matching</b> — matched by full path + HTTP method; understands endpoints
-                  inherited from base API interfaces, duplicate mappings, many-to-many relations,
-                  and paths written as constants.</li>
+              <li><b>Gutter icons</b> — matching methods get a jump icon (orange Feign / blue Controller);
+                  click it to jump, or pick from the chooser when a method maps to several counterparts.</li>
+              <li><b>Go to Declaration or Usages</b> (<code>Ctrl+B</code> / <code>Ctrl+Click</code>) — opens
+                  IDEA's native usages popup, listing the matching endpoints <b>and</b> the real call sites.</li>
+              <li><b>Go to Implementation</b> (<code>Ctrl+Alt+B</code>) — lists the matching endpoints,
+                  shown with the WAAAGH jump icon.</li>
+            </ul>
+            <b>Call Hierarchy</b> (<code>Ctrl+Alt+H</code>)
+            <ul>
+              <li>On a Feign method, <b>Callees</b> list the matching Controllers and keep walking into the
+                  server-side implementation.</li>
+              <li>On a Controller method, <b>Callers</b> list the matching Feign clients and keep walking up
+                  through the code that calls them.</li>
+            </ul>
+            <b>Copy URL</b>
+            <ul>
+              <li>Click the clipboard gutter icon on a Feign method or a Controller method to copy the complete
+                  request URL (context path + servlet path + package prefix + class path + method path).</li>
+            </ul>
+            <b>Endpoints tool window</b> (IntelliJ IDEA Ultimate)
+            <ul>
+              <li>Feeds the same resolved paths into IDEA's <i>Endpoints</i> view as two frameworks:
+                  <b>Waaagh Feign Client</b> (HTTP client) and <b>Waaagh MVC Controllers</b> (HTTP server).</li>
+            </ul>
+            <b>Matching</b>
+            <ul>
+              <li>Full path + HTTP method (a mapping without an explicit method matches any); context paths
+                  (<code>server.servlet.context-path</code>, <code>spring.mvc.servlet.path</code>); package-based
+                  prefixes from <code>PathMatchConfigurer#addPathPrefix</code>; endpoints inherited from base API
+                  interfaces; duplicate mappings and many-to-many relations; paths written as constants or
+                  <code>@Value</code>.</li>
             </ul>
             <b>How to use</b>
             <ol>
               <li>Open a project with Spring Cloud OpenFeign clients and Spring MVC Controllers.</li>
               <li>Open a <code>@FeignClient</code> interface or a Controller class — matching methods
                   get a gutter icon; click it to jump to the other side.</li>
-              <li>Or put the caret on a method and press <code>Ctrl+B</code> (Go to Declaration)
-                  or <code>Ctrl+Alt+B</code> (Go to Implementation).</li>
-              <li>Or press <code>Ctrl+Alt+H</code> (Call Hierarchy) to explore the mapping in both directions.</li>
-              <li>Editor-tab icons for Feign / Controller classes can be toggled in
-                  <b>Settings → search "WAAAGH"</b>.</li>
+              <li>Or put the caret on a method and press <code>Ctrl+B</code> (Go to Declaration),
+                  <code>Ctrl+Alt+B</code> (Go to Implementation) or <code>Ctrl+Alt+H</code> (Call Hierarchy).</li>
             </ol>
             <br><br>
             <b>中文</b>
@@ -42,29 +59,46 @@
             <b>WAAAGH —— Spring Cloud 项目的 Feign ↔ Controller 跳转工具。</b>
             <br><br>
             WAAAGH 是一个 IntelliJ IDEA 插件集合，受欢迎的工具未来可能会拆分成独立插件。
-            当前工具把 Spring Cloud 的 <code>@FeignClient</code> 接口与它们映射到的
-            <code>@RestController</code> / <code>@Controller</code> 端点连起来，直接在编辑器里跳转。
+            当前工具解析出 Spring Cloud <code>@FeignClient</code> 的哪个方法与 Spring MVC 的哪个
+            <code>@RestController</code> / <code>@Controller</code> 端点匹配（完整路径 + HTTP 方法），
+            再把这份映射通过 IDEA 自己的界面呈现出来。
             <br><br>
-            <b>功能</b>
+            <b>编辑器内导航</b>
             <ul>
-              <li><b>双向跳转</b> —— 匹配的方法旁会出现侧边栏图标，点击即在 Feign 方法与 Controller 端点之间跳转。</li>
-              <li><b>Go to Declaration / Implementation</b> —— 在 Feign 与 Controller 之间使用
-                  <code>Ctrl+B</code> / <code>Ctrl+单击</code>、<code>Ctrl+Alt+B</code>。</li>
-              <li><b>Call Hierarchy</b> —— 在 Feign 方法上看 Callees，列出它映射到的 Controller 方法；
-                  在 Controller 方法上看 Callers，列出会调用到它的 Feign 方法。</li>
-              <li><b>复制 URL</b> —— 点击侧边栏的剪贴板图标，复制完整请求 URL
+              <li><b>侧边栏图标</b> —— 匹配的方法旁显示跳转图标（Feign 橙 / Controller 蓝），点击即跳；
+                  一个方法对应多个目标时弹出选择框。</li>
+              <li><b>Go to Declaration or Usages</b>（<code>Ctrl+B</code> / <code>Ctrl+单击</code>）——
+                  打开 IDEA 原生 usages 弹窗，同时列出映射端点<b>和</b>真实调用点。</li>
+              <li><b>Go to Implementation</b>（<code>Ctrl+Alt+B</code>）—— 列出匹配端点，并带 WAAAGH 跳转图标。</li>
+            </ul>
+            <b>Call Hierarchy</b>（<code>Ctrl+Alt+H</code>）
+            <ul>
+              <li>Feign 方法的 <b>Callees</b> 列出匹配的 Controller，并继续往服务端实现里走；</li>
+              <li>Controller 方法的 <b>Callers</b> 列出匹配的 Feign 客户端，并继续上溯调用它们的代码。</li>
+            </ul>
+            <b>复制 URL</b>
+            <ul>
+              <li>点击 Feign 方法或 Controller 方法旁的剪贴板图标，复制完整请求 URL
                   （上下文路径 + servlet 路径 + 包前缀 + 类路径 + 方法路径）。</li>
-              <li><b>精确匹配</b> —— 按「完整路径 + HTTP 方法」匹配；支持从基础 API 接口继承的端点、
-                  重复映射、多对多关系，以及写在常量里的路径。</li>
+            </ul>
+            <b>Endpoints 工具窗口</b>（IntelliJ IDEA Ultimate）
+            <ul>
+              <li>用同一份解析结果向 IDEA 的 <i>Endpoints</i> 视图提供两个 framework：
+                  <b>Waaagh Feign Client</b>（HTTP client）与 <b>Waaagh MVC Controllers</b>（HTTP server）。</li>
+            </ul>
+            <b>匹配规则</b>
+            <ul>
+              <li>按「完整路径 + HTTP 方法」匹配（未写方法的映射视为通配）；支持上下文路径
+                  （<code>server.servlet.context-path</code>、<code>spring.mvc.servlet.path</code>）、
+                  <code>PathMatchConfigurer#addPathPrefix</code> 注册的包前缀、从基础 API 接口继承的端点、
+                  重复映射与多对多关系，以及写在常量或 <code>@Value</code> 里的路径。</li>
             </ul>
             <b>怎么用</b>
             <ol>
               <li>打开包含 Spring Cloud OpenFeign 客户端与 Spring MVC Controller 的项目。</li>
               <li>打开 <code>@FeignClient</code> 接口或 Controller 类 —— 匹配的方法旁会出现侧边栏图标，点击即跳到对端。</li>
-              <li>或者把光标放在方法上，按 <code>Ctrl+B</code>（Go to Declaration）/
-                  <code>Ctrl+Alt+B</code>（Go to Implementation）。</li>
-              <li>或者按 <code>Ctrl+Alt+H</code>（Call Hierarchy），双向查看映射关系。</li>
-              <li>Feign / Controller 类的编辑器标签图标可在 <b>Settings → 搜索 "WAAAGH"</b> 中开关。</li>
+              <li>或者把光标放在方法上，按 <code>Ctrl+B</code>（Go to Declaration）、
+                  <code>Ctrl+Alt+B</code>（Go to Implementation）或 <code>Ctrl+Alt+H</code>（Call Hierarchy）。</li>
             </ol>
             <br>
             <a href="https://github.com/velenzou/waaagh">GitHub</a>
@@ -73,6 +107,21 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.2.0</b>
+            <ul>
+              <li><b>Ctrl+B opens IDEA's own usages popup</b>: on a Feign / Controller method declaration,
+                  Ctrl+B now opens IDEA's native "Go to Declaration or Usages" popup — with the method
+                  signature header, the <i>Merge Usages from the Same Line</i> filters and the selected
+                  item's file path — and lists the matching endpoints <b>and</b> the method's call sites
+                  together. You can jump to the counterpart <i>and</i> back to a call site.</li>
+              <li><b>Mapping icons no longer leak</b>: the WAAAGH jump icons shown for the Feign ↔ Controller
+                  mapping entries in that popup now come from the method declaration only. The
+                  experimental editor-tab / project-tree class icons (and their setting) were removed,
+                  so native usages, tabs and the project tree keep IDEA's own icons.</li>
+              <li><b>Go to Implementation icons</b>: <code>Ctrl+Alt+B</code> now shows the matching endpoints
+                  with the WAAAGH jump icon too (blue for Controllers, orange for Feign clients); the rest
+                  of the popup stays native.</li>
+            </ul>
             <b>1.1.3</b>
             <ul>
               <li><b>Ctrl+B keeps IDEA's own results</b>: on a Feign / Controller method declaration,
@@ -127,6 +176,12 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
+    <!--
+      Endpoints 工具窗口增强（仅 Ultimate）：存在 Endpoints 插件时才加载 waaagh-endpoints.xml，
+      不会影响 Community 版或未启用 Endpoints 的 IDE。
+    -->
+    <depends optional="true" config-file="waaagh-endpoints.xml">com.intellij.microservices.ui</depends>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <!-- Gutter icon navigation -->
@@ -141,9 +196,17 @@
 
         <!-- Go to Implementation (Ctrl+Alt+B) -->
         <definitionsScopedSearch implementation="com.waaagh.navigation.FeignDefinitionsSearcher"/>
+        <!-- The WAAAGH jump icon on those entries comes from the IconProviders above (the popup resolves
+             each entry's icon through PsiElement#getIcon), so no gotoTargetPresentationProvider is needed. -->
 
-        <!-- Go to Declaration / Ctrl+Click -->
-        <gotoDeclarationHandler implementation="com.waaagh.navigation.FeignGotoDeclarationHandler"/>
+        <!--
+          Go to Declaration / Ctrl+Click. Only the Show Usages popup (USAGES_WITH_DEFAULT_OPTIONS) is
+          intercepted: the Feign <-> Controller counterpart is added as an extra usage so IDEA's own
+          "Go to Declaration or Usages" popup shows it together with the call sites, keeping the
+          native signature header / "Merge Usages from the Same Line" filters / file-path status bar.
+        -->
+        <findUsagesHandlerFactory order="first"
+                                  implementation="com.waaagh.navigation.FeignControllerFindUsagesHandlerFactory"/>
 
         <!-- Call Hierarchy: Feign methods show Controllers as callees; Controllers show Feign clients as callers. Delegates non-mapping to Java. -->
         <callHierarchyProvider language="JAVA" order="first"
@@ -153,12 +216,18 @@
                            displayType="BALLOON"
                            key="notification.group.name"/>
 
-        <iconProvider id="com.waaagh.provider.tabIcon.FeignClassIconProvider"
-                      implementation="com.waaagh.provider.tabIcon.FeignClassIconProvider"/>
-        <iconProvider id="com.waaagh.provider.tabIcon.RestControllerIconProvider"
-                      implementation="com.waaagh.provider.tabIcon.RestControllerIconProvider"/>
-
-        <applicationConfigurable implementation="com.waaagh.user.UserPluginConfigurableUI"/>
+        <!--
+          WAAAGH jump icons for Feign / Controller methods - both the method itself (the Ctrl+Alt+B
+          "Go to Implementation" entries resolve their icon through PsiElement#getIcon) and the name
+          identifier the Ctrl+B mapping entries point at. Bound to the method / its identifier rather
+          than to the Feign / Controller class: a class-level override also repaints every usage whose
+          containing class is a Feign / Controller, plus the editor tabs and the project tree.
+          See FeignMethodIconProvider.
+        -->
+        <iconProvider id="com.waaagh.provider.FeignMethodIconProvider"
+                      implementation="com.waaagh.provider.FeignMethodIconProvider"/>
+        <iconProvider id="com.waaagh.provider.RestControllerMethodIconProvider"
+                      implementation="com.waaagh.provider.RestControllerMethodIconProvider"/>
 
     </extensions>
 

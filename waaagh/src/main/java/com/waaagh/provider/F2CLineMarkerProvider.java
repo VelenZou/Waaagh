@@ -51,7 +51,8 @@ public class F2CLineMarkerProvider extends RelatedItemLineMarkerProvider {
           .setAlignment(RIGHT)
           .setTargets(resultList)
           .setTooltipTitle("Navigate to Targets in Controller");
-      result.add(builder.createLineMarkerInfo(Objects.requireNonNull(restfulAnnotation)));
+      result.add(builder.createLineMarkerInfo(
+          AnnotationParserUtils.lineMarkerLeaf(Objects.requireNonNull(restfulAnnotation))));
     }
   }
 }

@@ -254,6 +254,27 @@ public class AnnotationParserUtils {
         return httpMappingInfo;
     }
 
+    /**
+     * IntelliJ 平台约定：LineMarkerInfo 的注册元素必须是叶子节点，否则 IDE 会记录
+     * "LineMarker is supposed to be registered for leaf elements only" 性能警告。
+     * <p>
+     * 返回元素的第一个叶子子节点（对注解来说是 {@code @} token），
+     * 保持 gutter 图标仍落在该注解所在行；元素为空时原样返回。
+     *
+     * @param element 任意 PSI 元素（通常是 restful 注解）
+     * @return 第一个叶子子节点
+     */
+    public static PsiElement lineMarkerLeaf(PsiElement element) {
+        if (element == null) {
+            return null;
+        }
+        PsiElement leaf = element;
+        while (leaf.getFirstChild() != null) {
+            leaf = leaf.getFirstChild();
+        }
+        return leaf;
+    }
+
     public static String getValueFromRestful(PsiAnnotation annotation) {
         PsiAnnotationParameterList parameterList = annotation.getParameterList();
         PsiNameValuePair[] attributes = parameterList.getAttributes();

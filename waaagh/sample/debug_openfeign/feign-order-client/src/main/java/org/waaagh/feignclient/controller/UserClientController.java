@@ -14,9 +14,11 @@ import org.waaagh.feignclient.feign.client.UserClient;
  * ❌ 项目中没有 Feign 客户端声明该路径，不参与 Feign ↔ Controller 匹配；
  * 这里仅演示“Controller 调用 Feign 客户端”（见 userClient.getUserById）。
  * <p>
- * 同时是 Ctrl+B 回归用例：在 {@code UserClient#getUserById} 声明上按 Ctrl+B，弹框应同时列出
- * 3 个匹配 Controller <b>和</b>本文件里 {@code userClient.getUserById(id)} 这个调用处，
- * 而不是只剩 Controller（IDEA 原生的 “Go to Declaration or Usages” 不再被覆盖）。
+ * 同时是 Ctrl+B 回归用例：在 {@code UserClient#getUserById} 声明上按 Ctrl+B，会弹出 IDEA 原生的
+ * "Go to Declaration or Usages" usages 弹窗（顶部方法签名、中间 “Merge Usages from the Same Line”
+ * 等筛选项、底部选中项文件路径），列表里同时列出 3 个匹配 Controller <b>和</b>本文件里
+ * {@code userClient.getUserById(id)} 这个调用处——映射端点作为额外 usage 注入原生弹窗，
+ * 插件不再自建 chooser。
  * <p>
  * 另一个回归点：列出的“调用者”必须能跳到调用处。凡是 javadoc 里的 {@code @link ...} 引用
  * （例如 {@code UserDeleteClient} 类注释里的 {@code @link UserClient#getUserById}）都不应作为

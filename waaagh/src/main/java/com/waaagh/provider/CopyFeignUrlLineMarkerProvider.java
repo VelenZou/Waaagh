@@ -85,9 +85,10 @@ public class CopyFeignUrlLineMarkerProvider extends LineMarkerProviderDescriptor
           .createNotification("URL Copied To Clipboard:\n" + url, NotificationType.INFORMATION)
           .notify(finalMethod.getProject());
     };
-    // 构建图标信息，挂在方法上
+    // 构建图标信息，挂在注解行；
+    // LineMarkerInfo 元素必须是叶子节点（平台约定），范围仍取整个注解
     LineMarkerInfo<PsiElement> marker = new LineMarkerInfo<>(
-        restfulAnnotation,
+        AnnotationParserUtils.lineMarkerLeaf(restfulAnnotation),
         restfulAnnotation.getTextRange(),
         RestIcons.STATEMENT_LINE_CLIPBOARD_FEIGN_ICON,
         psi -> "Click To Copy Feign-URL: " + url,
