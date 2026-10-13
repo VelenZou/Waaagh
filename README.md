@@ -71,7 +71,7 @@ export JAVA_HOME=/path/to/jdk-25
 ./gradlew buildPlugin
 ```
 
-Output: `waaagh/build/distributions/waaagh-1.1.0.zip`
+Output: `waaagh/build/distributions/waaagh-<version>.zip` (override the version with `-PpluginVersion=1.2.3`)
 
 Run sandbox IDE:
 
