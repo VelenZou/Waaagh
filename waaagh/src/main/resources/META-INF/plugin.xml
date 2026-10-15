@@ -107,6 +107,15 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.2.1</b>
+            <ul>
+              <li><b>Minimum supported IDE raised to IntelliJ IDEA 2023.1</b>: the Endpoints
+                  integration implements <code>EndpointsUrlTargetProvider</code>, which does not exist in
+                  IntelliJ IDEA Ultimate 2022.1–2022.3. To keep the release installable on every version
+                  we claim to support, <code>since-build</code> is now <b>231</b> instead of 203, so
+                  JetBrains Marketplace no longer reports those builds as binary-incompatible. All
+                  features, including the Endpoints tool window integration, are unchanged.</li>
+            </ul>
             <b>1.2.0</b>
             <ul>
               <li><b>Ctrl+B opens IDEA's own usages popup</b>: on a Feign / Controller method declaration,
@@ -170,8 +179,8 @@
         ]]>
     </change-notes>
 
-    <version>1.2.0</version>
-    <idea-version since-build="203.0"/>
+    <version>1.2.1</version>
+    <idea-version since-build="231"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>

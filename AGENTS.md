@@ -65,8 +65,18 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 - Tag `v*` creates a GitHub Release with the zip; optional Marketplace publish via `PUBLISH_TOKEN`.
 
 ### Verified compatibility
-- `since-build` is **203 (2020.3)**. `./gradlew verifyPlugin` checks the plugin against
-  **2020.3.4 / 2021.1.3 / 2021.2.4** — all report **Compatible** (verifier 1.410).
+- `since-build` is **231 (IntelliJ IDEA 2023.1)**. `./gradlew verifyPlugin` checks the plugin against
+  **IU 2023.1.7 / IC 2023.1.7** — both report **Compatible** (verifier 1.410).
+- **Why not 203 (2020.3) any more:** the Endpoints integration
+  (`com.waaagh.endpoints.AbstractWaaaghEndpointsProvider`) implements
+  `com.intellij.microservices.endpoints.EndpointsUrlTargetProvider`, which **does not exist** in
+  IntelliJ IDEA Ultimate 2022.1–2022.3 (those Ultimate builds ship the microservices plugin but not
+  that class). Marketplace's automated verification therefore flagged IU 2022.1.4 / 2022.2.5 /
+  2022.3.3 as *Critical — Class not found (1)*. The class exists from **231** on (confirmed on
+  IU-231.9423.9 → `Compatible`), so `since-build` was raised to 231. Note the previous IC-only matrix
+  never caught this: `com.intellij.microservices.ui` is an **optional** dependency absent from
+  Community, so the verifier skips those classes on IC. **Always include an Ultimate IDE
+  (`IntelliJPlatformType.IntellijIdeaUltimate`) in the matrix.**
 - `current()` (2026.2.3) is commented out in the verification matrix: verifying it requires
   JetBrains Marketplace access to resolve transitive plugin dependencies. 2026.2.3 is covered by
   building and running the plugin in the sandbox (`runIde`) instead.

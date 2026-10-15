@@ -7,7 +7,7 @@ plugins {
 
 group = "com.waaagh"
 // CI can override via -PpluginVersion=1.2.3 (e.g. from a v* git tag)
-version = (findProperty("pluginVersion") as String?) ?: "1.2.0"
+version = (findProperty("pluginVersion") as String?) ?: "1.2.1"
 
 repositories {
     mavenCentral()
@@ -32,8 +32,16 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            // 起始支持版本：203 = IntelliJ IDEA 2020.3（以 verifyPlugin 矩阵为准）
-            sinceBuild = "203"
+            // 起始支持版本：231 = IntelliJ IDEA 2023.1（以 verifyPlugin 矩阵为准）。
+            //
+            // 为什么不再支持 203（2020.3）起：Endpoints 图标集成的 provider 实现了
+            // com.intellij.microservices.endpoints.EndpointsUrlTargetProvider，该类在
+            // 2022.1~2022.3 的 Ultimate 里并不存在（有 microservices 插件、缺这个类），
+            // Marketplace 的自动校验因此在 IU 2022.1.4 / 2022.2.5 / 2022.3.3 报
+            // “Class not found (1)”。该类自 231 起提供（已在 IU-231.9423.9 实测 Compatible）。
+            // 之前本地 verifyPlugin 只测 Community 版，而 IC 上没有可选的
+            // com.intellij.microservices.ui，verifier 会跳过这些类，所以从未暴露。
+            sinceBuild = "231"
             // 不设兼容上限
             untilBuild = provider { null }
         }
@@ -41,13 +49,14 @@ intellijPlatform {
 
     // 兼容性验证矩阵：最低支持版本 → 各关键节点 → 当前目标版本。
     // 运行 `./gradlew verifyPlugin`；IDE 发行包会在首次运行时下载。
-    // 注意：必须用带补丁号的版本（如 2020.3.4）——JetBrains 发布数据里 .0 基础版本的
+    // 注意：必须用带补丁号的版本（如 2023.1.7）——JetBrains 发布数据里 .0 基础版本的
     // 下载链接为空，会导致 “Couldn't resolve ... download URL” 错误。
     pluginVerification {
         ides {
-            create(IntelliJPlatformType.IntellijIdeaCommunity, "2020.3.4")
-            create(IntelliJPlatformType.IntellijIdeaCommunity, "2021.1.3")
-            create(IntelliJPlatformType.IntellijIdeaCommunity, "2021.2.4")
+            // 最低支持版本：必须测 Ultimate —— Endpoints 集成用的是可选的
+            // com.intellij.microservices.ui，只在 Ultimate 存在；只测 IC 会因依赖缺失被跳过。
+            create(IntelliJPlatformType.IntellijIdeaUltimate, "2023.1.7")
+            create(IntelliJPlatformType.IntellijIdeaCommunity, "2023.1.7")
             // current()（2026.2.3）验证需要访问 JetBrains Marketplace 解析传递依赖插件，
             // 在本机直连环境下会失败；2026.2.3 已在沙盒实测，需要时开代理再加回来。
             // current()

@@ -81,8 +81,9 @@ Run sandbox IDE:
 
 ## Compatibility
 
-- `since-build` is **203 — IntelliJ IDEA 2020.3**; compatible up to the latest (no `until-build`).
-- Verified with `./gradlew verifyPlugin` against **2020.3.4 / 2021.1.3 / 2021.2.4** (`Compatible`).
+- `since-build` is **231 — IntelliJ IDEA 2023.1**; compatible up to the latest (no `until-build`).
+- Verified with `./gradlew verifyPlugin` against **IU 2023.1.7 / IC 2023.1.7** (`Compatible`).
+- Requires IntelliJ IDEA 2023.1+ (the Endpoints integration uses an API introduced in that release).
 - The **Endpoints** integration additionally needs IntelliJ IDEA Ultimate (the bundled *Endpoints* plugin); everything else also works in Community.
 
 ## Sample project
