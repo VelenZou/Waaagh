@@ -1,8 +1,7 @@
 <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" fill="none">
-
  <g>
   <title>Layer 1</title>
-  <path id="svg_1" stroke-linejoin="round" stroke-linecap="round" stroke-width="1" stroke="#3574F0" d="m6.04,8.81l-2.45,0c-1.49,0 -2.45,-1.06 -2.34,-2.45c0.11,-1.38 1.28,-2.34 2.66,-2.34c0.32,-1.7 1.49,-2.88 3.09,-2.88c1.6,0 2.77,1.17 3.09,2.88c1.38,0 2.56,0.96 2.66,2.34c0.11,1.38 -0.85,2.45 -2.34,2.45l-2.45,0"/>
-  <path stroke="#3574F0" id="svg_2" stroke-linejoin="round" stroke-linecap="round" stroke-width="1" d="m6.25,6.91l0,3.82l-1.28,0l2.02,2.14l2.02,-2.14l-1.28,0l0,-3.82"/>
+  <path id="svg_1" stroke-linejoin="round" stroke-linecap="round" stroke-width="1" stroke="#3574F0" d="m5.97,11.1l-2.62,0c-1.59,0 -2.62,-1.13 -2.5,-2.62c0.12,-1.48 1.37,-2.5 2.85,-2.5c0.34,-1.82 1.59,-3.08 3.31,-3.08c1.71,0 2.96,1.25 3.31,3.08c1.48,0 2.74,1.03 2.85,2.5c0.12,1.48 -0.91,2.62 -2.5,2.62l-2.62,0"/>
+  <path id="svg_2" stroke-linejoin="round" stroke-linecap="round" stroke-width="1" stroke="#3574F0" d="m6.12,11.09l0,-2.87l-1.46,0l2.29,-1.74l2.29,1.74l-1.46,0l0,2.87"/>
  </g>
 </svg>

@@ -7,7 +7,7 @@
 
 在 IDE 内安装（**Settings → Plugins → Marketplace**，搜索 “WAAAGH”），或前往 [JetBrains Marketplace 插件页](https://plugins.jetbrains.com/plugin/33496)。
 
-> *Waaagh!* —— 战锤 30k 里兽人（Ork）那股咆哮着的绿色浪潮。他们凭直觉把破铜烂铁拼在一起，结果这玩意儿居然还能跑。本项目就是这种气质。
+> *Waaagh!* —— 战锤 40k 里兽人（Ork）那股咆哮着的绿色浪潮。他们凭直觉把破铜烂铁拼在一起，结果这玩意儿居然还能跑。本项目就是这种气质。
 
 **WAAAGH!!!** 是一个 IntelliJ IDEA 插件集合。集合里受欢迎的工具，未来可能会被拆分成独立发布的插件。
 
