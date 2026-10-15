@@ -81,8 +81,9 @@ export JAVA_HOME=/path/to/jdk-25
 
 ## 兼容性
 
-- `since-build` 为 **203 —— IntelliJ IDEA 2020.3**，向上不设上限。
-- 已用 `./gradlew verifyPlugin` 对 **2020.3.4 / 2021.1.3 / 2021.2.4** 验证（均 `Compatible`）。
+- `since-build` 为 **231 —— IntelliJ IDEA 2023.1**，向上不设上限。
+- 已用 `./gradlew verifyPlugin` 对 **IU 2023.1.7 / IC 2023.1.7** 验证（均 `Compatible`）。
+- 需要 IntelliJ IDEA 2023.1 及以上（Endpoints 集成用到该版本才引入的 API）。
 - **Endpoints** 集成额外需要 IntelliJ IDEA Ultimate（内置 *Endpoints* 插件）；其余能力在 Community 版同样可用。
 
 ## 示例工程
