@@ -7,7 +7,7 @@
 
 Install from the IDE (**Settings → Plugins → Marketplace**, search "WAAAGH") or get it on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/33496).
 
-> *Waaagh!* — the roaring green tide of Warhammer 30k Orks. They bolt scrap together on pure instinct, and somehow the thing *works*. Same energy here.
+> *Waaagh!* — the roaring green tide of Warhammer 40k Orks. They bolt scrap together on pure instinct, and somehow the thing *works*. Same energy here.
 
 **WAAAGH!!!** is a collection of IntelliJ IDEA plugins. Popular tools in the collection may later be spun out as their own standalone plugins.
 
