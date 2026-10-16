@@ -107,6 +107,14 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.2.2</b>
+            <ul>
+              <li><b>Jump icons match the plugin logo</b>: the Feign and Controller gutter icons now use
+                  exactly the shape of the WAAAGH logo (the cloud with the arrow), uniformly scaled and
+                  centred on the same line as the copy-URL icon — the two icons of a pair no longer look
+                  misaligned. Only the colour differs (orange for Feign, blue for Controllers).</li>
+              <li><b>Plugin logo</b>: rebuilt as a 40x40 icon from the same artwork.</li>
+            </ul>
             <b>1.2.1</b>
             <ul>
               <li><b>Minimum supported IDE raised to IntelliJ IDEA 2023.1</b>: the Endpoints
@@ -179,7 +187,7 @@
         ]]>
     </change-notes>
 
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <idea-version since-build="231"/>
 
     <depends>com.intellij.modules.platform</depends>
