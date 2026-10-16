@@ -8,6 +8,7 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.waaagh.cache.BilateralCacheManager;
 import com.waaagh.entity.HttpMappingInfo;
 import com.waaagh.enums.SpringCloudClassAnnotation;
+import com.waaagh.listener.app.ProjectCacheInvalidator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -67,11 +68,12 @@ public class FeignClassScanUtils {
         if (DumbService.isDumb(project)) {
             return Collections.emptyList();
         }
+        // 缓存第一次被填充时安装失效监听（PSI 编辑 / 索引完成 / 模块结构变化，惰性、幂等）
+        ProjectCacheInvalidator.ensureInstalled(project);
 
         // 只有全量扫描完成后才能直接使用缓存；按需补全的单方法缓存不能当作全量结果
         if (BilateralCacheManager.isFeignFullyScanned(project)) {
-            Map<String, HttpMappingInfo> feignCaches = BilateralCacheManager.queryFeignCaches(project);
-            return feignCaches == null ? Collections.emptyList() : new ArrayList<>(feignCaches.values());
+            return BilateralCacheManager.usableFeignCaches(project);
         }
 
         // 通过注解索引查找 @FeignClient 接口，避免全量递归遍历项目中的所有包
