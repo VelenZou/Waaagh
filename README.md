@@ -52,7 +52,7 @@ WAAAGH resolves which Spring Cloud `@FeignClient` method matches which Spring MV
 | Inheritance | Endpoint methods declared on a base API interface, reached through an empty `@FeignClient` sub-interface |
 | Path expressions | Constants, static fields, local variables, `@Value("${...}")` |
 | Shapes | Duplicate mappings and many-to-many relations |
-| Caching | Per-project cache, rescanned automatically after save / external change |
+| Caching | Per-project cache, refreshed automatically after save / external change, ~500 ms after you stop typing, and on indexing or module / source-root changes; `Tools → Refresh Feign ↔ Controller Mappings` forces a rescan |
 
 #### How it is wired (implementation notes)
 

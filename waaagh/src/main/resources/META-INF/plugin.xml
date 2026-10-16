@@ -107,6 +107,25 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.2.3</b>
+            <ul>
+              <li><b>Mappings refresh without saving</b>: edits in the editor are picked up about half
+                  a second after you stop typing — changing <code>@*Mapping</code> paths, adding or
+                  removing endpoint methods, adding <code>@FeignClient</code> / <code>@RestController</code>.
+                  Previously the cache was only refreshed on save or when an external editor changed the
+                  file. Gutter icons, Ctrl+B, Ctrl+Alt+B, Call Hierarchy and the Endpoints tool window
+                  follow along.</li>
+              <li><b>Rescan after indexing and structure changes</b>: re-importing the project
+                  (Maven / Gradle reload, dependency changes, Reload from Disk, Invalidate Caches) and
+                  changing modules or source roots (Mark as Sources Root, adding a module) now rescan
+                  the mappings instead of keeping stale entries.</li>
+              <li><b>Manual refresh</b>: <i>Tools → Refresh Feign ↔ Controller Mappings</i> (also in
+                  Find Action) clears the cache, rescans in the background and refreshes the gutter
+                  icons — handy when a mapping looks out of date.</li>
+              <li><b>Overloaded methods</b>: two endpoints with the same method name but different
+                  parameters (for example <code>find(Long)</code> and <code>find(String)</code>) are now
+                  tracked separately; previously one of them could disappear from navigation.</li>
+            </ul>
             <b>1.2.2</b>
             <ul>
               <li><b>Jump icons match the plugin logo</b>: the Feign and Controller gutter icons now use
@@ -250,11 +269,30 @@
 
     <!-- Project lifecycle: ProjectManagerListener is a message bus topic, not an extension point. -->
     <applicationListeners>
+        <!-- 项目关闭：清理缓存；项目已关闭：连数据版本号一起移除。
+             PSI / 索引 / 模块结构变化的失效监听（项目级服务 ProjectCacheInvalidator）在缓存第一次
+             被填充时惰性安装，见 ControllerClassScanUtils#scanControllerPaths。 -->
         <listener class="com.waaagh.listener.app.CacheCleanListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <!-- 保存 / 外部编辑器修改被 IDEA 同步后清理全量扫描缓存，下次查询自动重扫（无需重开项目） -->
+        <!-- 保存 / 外部编辑器修改被 IDEA 同步后清理全量扫描缓存（Java / Spring 配置 / 构建描述文件），
+             下次查询自动重扫（无需重开项目） -->
         <listener class="com.waaagh.listener.app.VfsCacheRefreshListener"
                   topic="com.intellij.openapi.vfs.VirtualFileManager"/>
     </applicationListeners>
+
+    <!--
+      手动刷新入口：清空缓存 + 后台重扫 + 重启 Daemon。
+      自动失效已覆盖：文件保存 / 外部修改（VfsCacheRefreshListener）、编辑器内未保存的 PSI 修改
+      （停顿 500ms 后清理）、索引完成、模块 / 源根变化（ProjectCacheInvalidator）。
+      该 action 是怀疑缓存与代码不一致时的兜底，也可在 Find Action 中搜索执行。
+    -->
+    <actions>
+        <action id="Waaagh.RefreshMappings"
+                class="com.waaagh.action.WaaaghRefreshAction"
+                text="Refresh Feign ↔ Controller Mappings"
+                description="Clear the WAAAGH cache and rescan Feign clients and Controllers">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
 
 </idea-plugin>

@@ -16,6 +16,7 @@ import com.intellij.psi.util.CachedValuesManager;
 import com.waaagh.cache.BilateralCacheManager;
 import com.waaagh.entity.HttpMappingInfo;
 import com.waaagh.enums.SpringBootClassAnnotation;
+import com.waaagh.listener.app.ProjectCacheInvalidator;
 import com.waaagh.properties.ConfigReader;
 import com.waaagh.properties.ServerParser;
 import java.util.ArrayList;
@@ -45,13 +46,12 @@ public class ControllerClassScanUtils {
     if (DumbService.isDumb(project)) {
       return Collections.emptyList();
     }
+    // 缓存第一次被填充时安装失效监听（PSI 编辑 / 索引完成 / 模块结构变化，惰性、幂等）
+    ProjectCacheInvalidator.ensureInstalled(project);
 
     // 只有全量扫描完成后才能直接使用缓存；按需补全的单方法缓存不能当作全量结果
     if (BilateralCacheManager.isControllerFullyScanned(project)) {
-      Map<String, HttpMappingInfo> controllerCaches = BilateralCacheManager.queryControllerCaches(
-          project);
-      return controllerCaches == null ? Collections.emptyList()
-          : new ArrayList<>(controllerCaches.values());
+      return BilateralCacheManager.usableControllerCaches(project);
     }
 
     // 通过注解索引查找 Controller 类，避免全量递归遍历项目中的所有包

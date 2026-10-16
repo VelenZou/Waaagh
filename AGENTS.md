@@ -31,10 +31,16 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 - Maven tool window → **Reload All Maven Projects**. The bundled Maven in 2026.2.3 handles the
   sample's Maven 3.9.7 wrapper fine — the old IDEA 2021.2 import failure no longer applies.
 - If newly added sample files don't show up, right-click the sample root → **Reload from Disk**.
-- The plugin's scan results are cached per project; the cache is invalidated automatically when
-  Java / Spring config files are saved or changed on disk (e.g. by Cursor) and synchronized by
-  the IDE — the next navigation or gutter request triggers a rescan. Single-method URL copy is
-  always recomputed on the spot.
+- The plugin's scan results are cached per project and refreshed automatically: after a Java /
+  Spring-config / build-file save or an external change (e.g. by Cursor) synchronized by the IDE,
+  ~500 ms after you stop typing (unsaved editor edits count too), and on indexing or
+  module/source-root changes. The next navigation or gutter request triggers a rescan.
+  `Tools → Refresh Feign ↔ Controller Mappings` (or Find Action) forces a clear + rescan.
+  Single-method URL copy is always recomputed on the spot.
+- Cache timing can be traced: start the sandbox with `-Dwaaagh.debug=true` (e.g. append it to
+  `.intellijPlatform/sandbox/waaagh/IU-2026.2.3/config_runIde/idea.vmoptions`) and `idea.log`
+  gets `[waaagh-cache]` INFO lines for every clear / rescan with the reason, endpoint counts and
+  data version — useful when debugging "gutter icons do not refresh".
 - **Sandbox plugins are managed by Gradle.** `prepareSandbox_runIde` is a Gradle `Sync` task
   and `plugins_runIde/` is its destination: whenever it actually runs (e.g. after the plugin jar
   changed), it rewrites the whole sandbox plugins directory, deleting plugins installed via

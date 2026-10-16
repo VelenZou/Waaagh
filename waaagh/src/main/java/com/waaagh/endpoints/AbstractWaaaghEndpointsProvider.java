@@ -215,8 +215,11 @@ abstract class AbstractWaaaghEndpointsProvider
 
     @Override
     public ModificationTracker getModificationTracker(@NotNull Project project) {
-        // WAAAGH 自己的数据版本（缓存清理 / 全量扫描完成时变化），而不是全局 PSI 计数：
-        // 后者会让 Endpoints 视图在 HTTP Client 面板自身产生的 PSI 变化上反复重载（面板抖动）。
+        // WAAAGH 自己的数据版本：缓存被清理（保存、PSI 编辑停顿、索引完成、模块结构变化）或
+        // 全量扫描完成时变化，而不是全局 PSI 计数——后者会让 Endpoints 视图在 HTTP Client
+        // 面板自身产生的 PSI 变化上反复重载（面板抖动）。
+        // 编辑器内的 PSI 编辑由 ProjectCacheInvalidator 防抖后清理缓存并 +1：视图在编辑停顿后
+        // 刷新一次，而不是每敲一个字符刷新一次。
         return BilateralCacheManager.getModificationTracker(project);
     }
 
