@@ -2,9 +2,10 @@ name: Build Plugin
 
 # 打包 Waaagh 插件：
 # - push 到 master / 手动触发 / 提 PR：构建并把 zip 作为 workflow 产物上传（Actions 运行页可下载）
-# - 推送 v* 标签：创建 GitHub Release 并附带 zip
+# - 推送 v* 标签：先跑兼容性校验（verify job），通过后创建 GitHub Release 并附带 zip
 # - 同一标签且仓库配置了 PUBLISH_TOKEN secret：额外发布到 JetBrains Marketplace
-# - 发布（Release / Marketplace）仅限仓库 owner 推送的、且指向 master 上提交的 v* 标签（release-gate 门禁）
+# - 发布（Release / Marketplace）仅限仓库 owner 推送的、且指向 master 上提交的 v* 标签（release-gate 门禁），
+#   并且必须通过 verify（verifyPlugin 在验证矩阵上无 Problems）
 
 on:
   push:
@@ -80,9 +81,35 @@ jobs:
             *) echo "::error::The tagged commit is not on master (status=${status}); refusing to release."; exit 1;;
           esac
 
-  release:
-    # 仅在发布门禁通过后创建 GitHub Release
+  verify:
+    # 发布前兼容性门禁：在验证矩阵上跑 verifyPlugin（IU/IC 2023.1.7 + IU 2023.2.8）。
+    # 任何一套 IDE 报出 Problems（class/field/method not found 等二进制不兼容）都会让本 job 失败，
+    # 从而挡住 release 与 Marketplace 发布 —— 1.2.3 的 ModuleRootListener.TOPIC 问题就是这样漏到
+    # Marketplace 事后校验才被发现的。deprecated API 属于 Warnings，仍会显示在报告里但不阻塞发布。
+    # 首次运行会下载 3 套 IDE 发行包（约 4 GB），会进入 Gradle cache；tag 构建本身不频繁，可以接受。
     needs: release-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Verify plugin compatibility
+        working-directory: waaagh
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          chmod +x gradlew
+          ./gradlew verifyPlugin --no-daemon -PpluginVersion="${VERSION}"
+
+  release:
+    # 仅在发布门禁 + 兼容性校验都通过后创建 GitHub Release
+    needs: [release-gate, verify]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -101,8 +128,9 @@ jobs:
           fail_on_unmatched_files: true
 
   publish-marketplace:
-    # 可选：配置 Secrets.PUBLISH_TOKEN（JetBrains Marketplace 永久令牌）后，发布门禁通过时自动上架
-    needs: release-gate
+    # 可选：配置 Secrets.PUBLISH_TOKEN（JetBrains Marketplace 永久令牌）后，发布门禁 + 兼容性校验
+    # 都通过时自动上架
+    needs: [release-gate, verify]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -69,6 +69,10 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 ### CI
 - Workflow `.github/workflows/build-plugin.yml` builds on PR / push to master.
 - Tag `v*` creates a GitHub Release with the zip; optional Marketplace publish via `PUBLISH_TOKEN`.
+- Before a tag release, the `verify` job runs `./gradlew verifyPlugin` (IU/IC 2023.1.7 + IU 2023.2.8)
+  and blocks both the Release and the Marketplace upload on any *Problems* — binary incompatibilities
+  now fail the pipeline instead of surfacing in the Marketplace report after publishing. The first
+  run downloads the three IDE distributions into the Gradle cache.
 
 ### Verified compatibility
 - `since-build` is **231 (IntelliJ IDEA 2023.1)**. `./gradlew verifyPlugin` checks the plugin against
