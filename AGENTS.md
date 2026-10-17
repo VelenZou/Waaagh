@@ -72,7 +72,19 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
 
 ### Verified compatibility
 - `since-build` is **231 (IntelliJ IDEA 2023.1)**. `./gradlew verifyPlugin` checks the plugin against
-  **IU 2023.1.7 / IC 2023.1.7** — both report **Compatible** (verifier 1.410).
+  **IU 2023.1.7 / IC 2023.1.7 / IU 2023.2.8** — all report **Compatible** (verifier 1.410).
+- **Module-root topic boundary (231/232 vs 233+):** `ModuleRootListener.TOPIC` only exists from
+  **233**; on 231/232 the topic is `ProjectTopics.PROJECT_ROOTS`. 1.2.3 referenced `TOPIC` directly
+  and the Marketplace verifier flagged IU 2023.1.7 / 2023.2.8 as *Critical — Access to unresolved
+  field `ModuleRootListener.TOPIC`*. `ProjectCacheInvalidator#findRootsTopic` now resolves it
+  reflectively (`ModuleRootListener.TOPIC` → `ProjectTopics.PROJECT_ROOTS` → skip, with the
+  `ProjectRootModificationTracker` stamp as a lazy fallback), which keeps one binary compatible with
+  both. **Do not reference either field directly.** IU 2023.2.8 was added to the matrix for this.
+- **`DaemonCodeAnalyzer.restart()` is deprecated from 2025.3** (the replacement
+  `restart(Object reason)` does not exist on 231). Calling it directly shows up as
+  *"Compatible. 1 usage of deprecated API"* in the Marketplace report, so `DaemonRestartUtils`
+  invokes it reflectively (new overload first, no-arg fallback) and silently skips when neither is
+  available.
 - **Why not 203 (2020.3) any more:** the Endpoints integration
   (`com.waaagh.endpoints.AbstractWaaaghEndpointsProvider`) implements
   `com.intellij.microservices.endpoints.EndpointsUrlTargetProvider`, which **does not exist** in
@@ -85,7 +97,10 @@ Maven project with its three modules (`cloud-feign-api`, `cloud-feign-server`,
   (`IntelliJPlatformType.IntellijIdeaUltimate`) in the matrix.**
 - `current()` (2026.2.3) is commented out in the verification matrix: verifying it requires
   JetBrains Marketplace access to resolve transitive plugin dependencies. 2026.2.3 is covered by
-  building and running the plugin in the sandbox (`runIde`) instead.
+  building and running the plugin in the sandbox (`runIde`) instead. `ides.local(...)` hits the
+  same dependency resolution, so a local full check fails the same way; for a local-only
+  deprecated-API check run the standalone verifier directly:
+  `java -jar verifier-cli-<v>-all.jar check-plugin -subsystems-to-check deprecated-api <zip> "<IDE>/Contents"`.
 
 ### Icons (why IconProvider, not gotoTargetPresentationProvider)
 - All WAAAGH jump icons go through `com.waaagh.provider.FeignMethodIconProvider` /

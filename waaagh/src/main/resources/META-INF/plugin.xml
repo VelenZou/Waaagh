@@ -107,6 +107,13 @@
 
     <change-notes>
         <![CDATA[
+            <b>1.2.4</b>
+            <ul>
+              <li><b>IntelliJ IDEA 2023.1 / 2023.2 compatibility</b>: the 1.2.3 build could fail with
+                  <code>NoSuchFieldError: ModuleRootListener.TOPIC</code> on those versions — module and
+                  source-root change tracking used an API that only exists since 2023.3. It now works on
+                  every supported version.</li>
+            </ul>
             <b>1.2.3</b>
             <ul>
               <li><b>Mappings refresh without saving</b>: edits in the editor are picked up about half
