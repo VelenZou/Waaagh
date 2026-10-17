@@ -43,6 +43,10 @@ touching the release pipeline. (Build/run conventions live in `AGENTS.md`.)
 - The `release-gate` job enforces two rules: **only tag pushes by the repository owner** enter the
   release flow, and **the tagged commit must be on `master`** — only owner + review-merged code can
   be published.
+- A `verify` job then runs `./gradlew verifyPlugin` on the verification matrix (IU/IC 2023.1.7 +
+  IU 2023.2.8) and gates **both** the GitHub Release and the Marketplace upload: any *Problems*
+  (binary incompatibilities such as class/field not found) fail the release. Deprecated-API usages
+  are reported as *Warnings* and do not block, but keep them at zero (see AGENTS.md).
 - **Never reuse a published version/tag** — Marketplace rejects duplicate versions; always bump to the next unused patch.
 - Plugin **signing is optional**. Keep the guarded `signPlugin` block in `waaagh/build.gradle.kts` (only sign
   when `CERTIFICATE_CHAIN` and `PRIVATE_KEY` are non-blank). Publishing unsigned is fine; do not make signing mandatory.
