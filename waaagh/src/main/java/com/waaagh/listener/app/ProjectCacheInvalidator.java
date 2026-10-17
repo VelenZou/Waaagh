@@ -22,6 +22,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiSearchHelper;
 import com.intellij.psi.search.UsageSearchContext;
 import com.intellij.util.Alarm;
+import com.intellij.util.messages.Topic;
 import com.waaagh.cache.BilateralCacheManager;
 import com.waaagh.utils.AnnotationParserUtils;
 import com.waaagh.utils.DaemonRestartUtils;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 映射缓存的"主动失效"监听（项目级服务），补齐原先只有"保存 / 外部同步"才会清理的场景：
@@ -82,14 +84,57 @@ public final class ProjectCacheInvalidator extends PsiTreeChangeAdapter implemen
             invalidateNow("indexing finished");
           }
         });
-    project.getMessageBus().connect(this)
-        .subscribe(ModuleRootListener.TOPIC, new ModuleRootListener() {
-          @Override
-          public void rootsChanged(@NotNull ModuleRootEvent event) {
-            // 模块、源根、SDK 变化：缓存里的“业务类”判断与端点集合都可能已过期
-            invalidateNow("module / source-root change");
-          }
-        });
+    Topic<ModuleRootListener> rootsTopic = findRootsTopic();
+    if (rootsTopic != null) {
+      project.getMessageBus().connect(this)
+          .subscribe(rootsTopic, new ModuleRootListener() {
+            @Override
+            public void rootsChanged(@NotNull ModuleRootEvent event) {
+              // 模块、源根、SDK 变化：缓存里的“业务类”判断与端点集合都可能已过期
+              invalidateNow("module / source-root change");
+            }
+          });
+    }
+  }
+
+  /**
+   * 解析"模块根变化"的 message bus topic：
+   * <ul>
+   *   <li>233+：{@code ModuleRootListener.TOPIC}</li>
+   *   <li>231~232：{@code ProjectTopics.PROJECT_ROOTS}（233 起该字段被移除，topic 迁到 listener 上）</li>
+   * </ul>
+   * 用反射而不是直接引用：{@code ModuleRootListener.TOPIC} 在 231/232 不存在，直接引用会让插件与
+   * 231/232 二进制不兼容（Marketplace 校验报 "Access to unresolved field ModuleRootListener.TOPIC"）。
+   * 两个都解析不到时返回 {@code null}：模块结构变化还有
+   * {@link BilateralCacheManager} 里的项目根版本号做惰性兜底。
+   */
+  @Nullable
+  @SuppressWarnings("unchecked")
+  private static Topic<ModuleRootListener> findRootsTopic() {
+    Object topic = readStaticField(ModuleRootListener.class, "TOPIC");
+    if (topic == null) {
+      topic = readStaticField("com.intellij.openapi.roots.ProjectTopics", "PROJECT_ROOTS");
+    }
+    return topic instanceof Topic ? (Topic<ModuleRootListener>) topic : null;
+  }
+
+  @Nullable
+  private static Object readStaticField(@NotNull Class<?> owner, @NotNull String fieldName) {
+    try {
+      return owner.getField(fieldName).get(null);
+    } catch (ReflectiveOperationException | LinkageError ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Object readStaticField(@NotNull String className, @NotNull String fieldName) {
+    try {
+      return readStaticField(Class.forName(className), fieldName);
+    } catch (ClassNotFoundException | LinkageError ignored) {
+      // 该类只在 231/232 存在（233+ 已移除 ProjectTopics）
+      return null;
+    }
   }
 
   /**

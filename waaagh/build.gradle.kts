@@ -57,6 +57,10 @@ intellijPlatform {
             // com.intellij.microservices.ui，只在 Ultimate 存在；只测 IC 会因依赖缺失被跳过。
             create(IntelliJPlatformType.IntellijIdeaUltimate, "2023.1.7")
             create(IntelliJPlatformType.IntellijIdeaCommunity, "2023.1.7")
+            // 2023.2 是 topic API 的分界点：ModuleRootListener.TOPIC 从 233 才有，
+            // 231/232 只有 ProjectTopics.PROJECT_ROOTS。1.2.3 就是在这里被 Marketplace 校验
+            // 报 “Access to unresolved field ModuleRootListener.TOPIC”，所以把这个版本纳入矩阵。
+            create(IntelliJPlatformType.IntellijIdeaUltimate, "2023.2.8")
             // current()（2026.2.3）验证需要访问 JetBrains Marketplace 解析传递依赖插件，
             // 在本机直连环境下会失败；2026.2.3 已在沙盒实测，需要时开代理再加回来。
             // current()
